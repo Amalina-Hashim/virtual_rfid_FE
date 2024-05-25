@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Form, Container, Table, Row, Col } from "react-bootstrap";
+
 import {
   GoogleMap,
   useLoadScript,
@@ -198,14 +199,32 @@ const AddLocationPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const locationPayload = {
+      country: locationData.country,
+      latitude: parseFloat(locationData.latitude).toFixed(6),
+      longitude: parseFloat(locationData.longitude).toFixed(6),
+      address_name: locationData.address_name,
+      location_name: locationData.location_name,
+      radius: parseFloat(locationData.radius).toFixed(2),
+      polygon_points: locationData.polygon_points,
+    };
+
+    console.log("Location payload:", locationPayload);
+
     try {
-      const locationResponse = await createLocation(locationData);
+      const locationResponse = await createLocation(locationPayload);
       const locationId = locationResponse.data.id;
 
-      await createChargingLogic({
+      const chargingLogicPayload = {
         ...chargingLogicData,
         location: locationId,
-      });
+        amount_rate: convertAmountRate(chargingLogicData.amount_rate), // Correct the amount_rate
+      };
+
+      console.log("Charging Logic payload:", chargingLogicPayload);
+
+      await createChargingLogic(chargingLogicPayload);
 
       const response = await getChargingLogics();
       setChargingLogics(response.data);
@@ -214,10 +233,17 @@ const AddLocationPage = () => {
     }
   };
 
-  if (loadError) return "Error loading maps";
-  if (!isLoaded) return "Loading Maps";
+  const convertAmountRate = (displayValue) => {
+    const rateMapping = {
+      "Per Second": "second",
+      "Per Minute": "minute",
+      "Per Hour": "hour",
+    };
+    return rateMapping[displayValue];
+  };
 
-  console.log("Google Maps API loaded with libraries: places, drawing");
+
+
 
   return (
     <Container>

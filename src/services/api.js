@@ -49,4 +49,7 @@ export const createMonth = (data) => api.post("/months/", data);
 export const getYears = () => api.get("/years/");
 export const createYear = (data) => api.post("/years/", data);
 
+// calculateCharge function
+export const calculateCharge = (data) => api.post("/calculate-charge/", data);
+
 export default api;
