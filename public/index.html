@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Web site created using create-react-app" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <script src="%PUBLIC_URL%/env.js" type="application/javascript"></script>
+  <script>
+    function loadScript() {
+      if (window.REACT_APP_GOOGLE_MAPS_API_KEY) {
+        const scriptTag = document.createElement("script");
+        scriptTag.src = "https://maps.googleapis.com/maps/api/js?key=" + window.REACT_APP_GOOGLE_MAPS_API_KEY + "&libraries=places,drawing&v=weekly";
+        scriptTag.defer = true;
+        document.head.appendChild(scriptTag);
+        console.log("Google Maps API loaded with libraries: places, drawing");
+      }
+    }
+    loadScript();
+  </script>
+  <meta http-equiv="Content-Security-Policy"
+    content="script-src 'self' https://maps.googleapis.com/ https://maps.gstatic.com/ 'unsafe-inline';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <title>Geopayment</title>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+</body>
+
+</html>
