@@ -300,44 +300,38 @@ const EditChargingLogicPage = () => {
             readOnly
           />
         </Form.Group>
-        <h2>Charging Logic:</h2>
-        <Row>
-          <Col>
-            <Form.Group controlId="formStartTime">
-              <Form.Label>Start Time</Form.Label>
-              <Form.Control
-                type="time"
-                value={chargingLogicData.start_time}
-                onChange={(e) =>
-                  setChargingLogicData({
-                    ...chargingLogicData,
-                    start_time: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
-          </Col>
-          <Col>
-            <Form.Group controlId="formEndTime">
-              <Form.Label>End Time</Form.Label>
-              <Form.Control
-                type="time"
-                value={chargingLogicData.end_time}
-                onChange={(e) =>
-                  setChargingLogicData({
-                    ...chargingLogicData,
-                    end_time: e.target.value,
-                  })
-                }
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+        <h2>Charging Logic</h2>
+        <Form.Group controlId="formStartTime">
+          <Form.Label>Start Time</Form.Label>
+          <Form.Control
+            type="time"
+            value={chargingLogicData.start_time || ""}
+            onChange={(e) =>
+              setChargingLogicData({
+                ...chargingLogicData,
+                start_time: e.target.value,
+              })
+            }
+          />
+        </Form.Group>
+        <Form.Group controlId="formEndTime">
+          <Form.Label>End Time</Form.Label>
+          <Form.Control
+            type="time"
+            value={chargingLogicData.end_time || ""}
+            onChange={(e) =>
+              setChargingLogicData({
+                ...chargingLogicData,
+                end_time: e.target.value,
+              })
+            }
+          />
+        </Form.Group>
         <Form.Group controlId="formAmountToCharge">
           <Form.Label>Amount to Charge</Form.Label>
           <Form.Control
             type="number"
-            value={chargingLogicData.amount_to_charge}
+            value={chargingLogicData.amount_to_charge || ""}
             onChange={(e) =>
               setChargingLogicData({
                 ...chargingLogicData,
@@ -349,26 +343,33 @@ const EditChargingLogicPage = () => {
         <Form.Group controlId="formAmountRate">
           <Form.Label>Amount Rate</Form.Label>
           <Form.Control
-            type="number"
-            value={chargingLogicData.amount_rate}
+            as="select"
+            value={chargingLogicData.amount_rate || ""}
             onChange={(e) =>
               setChargingLogicData({
                 ...chargingLogicData,
                 amount_rate: e.target.value,
               })
             }
-          />
+          >
+            <option value="">Select Rate</option>
+            <option value="second">Per Second</option>
+            <option value="minute">Per Minute</option>
+            <option value="hour">Per Hour</option>
+            <option value="day">Per Day</option>
+            <option value="month">Per Month</option>
+          </Form.Control>
         </Form.Group>
         <Form.Group controlId="formDays">
           <Form.Label>Days</Form.Label>
           <Form.Control
-            as="textarea"
-            rows={3}
-            value={chargingLogicData.days.join(", ")}
+            type="text"
+            placeholder="Enter days (e.g., Mon,Tue,Wed)"
+            value={chargingLogicData.days.join(",")}
             onChange={(e) =>
               setChargingLogicData({
                 ...chargingLogicData,
-                days: e.target.value.split(",").map((day) => day.trim()),
+                days: e.target.value.split(","),
               })
             }
           />
@@ -376,13 +377,13 @@ const EditChargingLogicPage = () => {
         <Form.Group controlId="formMonths">
           <Form.Label>Months</Form.Label>
           <Form.Control
-            as="textarea"
-            rows={3}
-            value={chargingLogicData.months.join(", ")}
+            type="text"
+            placeholder="Enter months (e.g., Jan,Feb,Mar)"
+            value={chargingLogicData.months.join(",")}
             onChange={(e) =>
               setChargingLogicData({
                 ...chargingLogicData,
-                months: e.target.value.split(",").map((month) => month.trim()),
+                months: e.target.value.split(","),
               })
             }
           />
@@ -390,21 +391,19 @@ const EditChargingLogicPage = () => {
         <Form.Group controlId="formYears">
           <Form.Label>Years</Form.Label>
           <Form.Control
-            as="textarea"
-            rows={3}
-            value={chargingLogicData.years.join(", ")}
+            type="text"
+            placeholder="Enter years (e.g., 2021,2022)"
+            value={chargingLogicData.years.join(",")}
             onChange={(e) =>
               setChargingLogicData({
                 ...chargingLogicData,
-                years: e.target.value
-                  .split(",")
-                  .map((year) => parseInt(year.trim(), 10)),
+                years: e.target.value.split(","),
               })
             }
           />
         </Form.Group>
         <Button variant="primary" type="submit">
-          Submit
+          Save
         </Button>
       </Form>
     </Container>

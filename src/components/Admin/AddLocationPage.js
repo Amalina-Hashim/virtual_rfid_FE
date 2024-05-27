@@ -10,7 +10,8 @@ import {
 import {
   createLocation,
   createChargingLogic,
-  getChargingLogics,
+    getChargingLogics,
+  deleteChargingLogic,
 } from "../../services/api";
 import { useGoogleMaps } from "../../GoogleMapsProvider";
 
@@ -64,14 +65,57 @@ const AddLocationPage = () => {
     const fetchChargingLogics = async () => {
       try {
         const response = await getChargingLogics();
-        const formattedData = response.data.map((logic) => ({
-          ...logic,
-          days: logic.days ? logic.days.map((day) => day.name) : [], 
-          months: logic.months ? logic.months.map((month) => month.name) : [], 
-          years: logic.years
-            ? logic.years.map((year) => year.year.toString())
-            : [], 
-        }));
+        console.log("Charging logics raw response data:", response.data);
+
+        const formattedData = response.data.map((logic) => {
+          const days = Array.isArray(logic.days)
+            ? logic.days.map((day) => {
+                if (typeof day === "string") {
+                  try {
+                    const parsedDay = JSON.parse(day.replace(/'/g, '"'));
+                    return parsedDay.name.toLowerCase();
+                  } catch (e) {
+                    return day;
+                  }
+                }
+                return day.name.toLowerCase();
+              })
+            : [];
+
+          const months = Array.isArray(logic.months)
+            ? logic.months.map((month) => {
+                if (typeof month === "string") {
+                  try {
+                    const parsedMonth = JSON.parse(month.replace(/'/g, '"'));
+                    return parsedMonth.name.toLowerCase();
+                  } catch (e) {
+                    return month;
+                  }
+                }
+                return month.name.toLowerCase();
+              })
+            : [];
+
+          const years = Array.isArray(logic.years)
+            ? logic.years.map((year) => {
+                if (year !== undefined && year !== null) {
+                  return typeof year === "object" && year.year !== undefined
+                    ? year.year.toString()
+                    : year.toString();
+                }
+                return "";
+              })
+            : [];
+
+          return {
+            ...logic,
+            days,
+            months,
+            years,
+          };
+        });
+
+        console.log("Formatted charging logics data:", formattedData);
         setChargingLogics(formattedData);
       } catch (error) {
         console.error("Failed to fetch charging logics", error);
@@ -254,34 +298,62 @@ const AddLocationPage = () => {
       polygon_points: locationData.polygon_points,
     };
 
-    console.log("Location payload:", locationPayload);
-
     try {
       const locationResponse = await createLocation(locationPayload);
       const locationId = locationResponse.data.id;
 
+      console.log("Charging Logic Data:", chargingLogicData);
+      console.log("Years before conversion:", chargingLogicData.years);
+      console.log("Years data type:", typeof chargingLogicData.years[0]);
+
+      const amountRate = convertAmountRate(chargingLogicData.amount_rate);
+      console.log("Converted Amount Rate:", amountRate);
+
       const chargingLogicPayload = {
         ...chargingLogicData,
         location: locationId,
-        amount_rate: convertAmountRate(chargingLogicData.amount_rate),
-        days: chargingLogicData.days.map((day) => ({ name: day })),
-        months: chargingLogicData.months.map((month) => ({ name: month })),
-        years: chargingLogicData.years.map((year) => parseInt(year, 10)), // Convert to integers
+        amount_rate: amountRate,
+        days: chargingLogicData.days
+          ? chargingLogicData.days.map((day) => day.toString())
+          : [],
+        months: chargingLogicData.months
+          ? chargingLogicData.months.map((month) => month.toString())
+          : [],
+        years: chargingLogicData.years
+          ? chargingLogicData.years.map((year) => parseInt(year).toString())
+          : [],
       };
 
-      console.log("Charging Logic payload:", chargingLogicPayload);
+      console.log("Charging Logic Payload:", chargingLogicPayload);
 
-      await createChargingLogic(chargingLogicPayload);
+      const chargingLogicResponse = await createChargingLogic(
+        chargingLogicPayload
+      );
+      console.log("Charging Logic Response:", chargingLogicResponse);
 
       const response = await getChargingLogics();
-      const formattedData = response.data.map((logic) => ({
-        ...logic,
-        days: logic.days.map((day) => day.name),
-        months: logic.months.map((month) => month.name),
-        years: logic.years
-          ? logic.years.map((year) => year.year.toString())
-          : [], // Check for undefined years
-      }));
+      console.log("Fetched Charging Logics:", response.data);
+
+      const formattedData = response.data.map((logic) => {
+        console.log("Logic before formatting:", logic);
+
+        return {
+          ...logic,
+          days: logic.days ? logic.days.map((day) => day.name) : [],
+          months: logic.months ? logic.months.map((month) => month.name) : [],
+          years: logic.years
+            ? logic.years.map((year) => {
+                if (year && year.year !== undefined) {
+                  return year.year.toString();
+                } else {
+                  console.warn("Undefined year found:", year);
+                  return ""; // Handle undefined year appropriately
+                }
+              })
+            : [],
+        };
+      });
+      console.log("Formatted Charging Logics Data:", formattedData);
       setChargingLogics(formattedData);
 
       navigate("/admin/home", {
@@ -297,9 +369,23 @@ const AddLocationPage = () => {
       "Per Second": "second",
       "Per Minute": "minute",
       "Per Hour": "hour",
+      "Per Day": "day",
+      "Per Month": "month",
     };
-    return rateMapping[displayValue];
+
+    console.log("Display Value:", displayValue); 
+
+    return rateMapping[displayValue] || displayValue;
   };
+    
+    const handleDelete = async (id) => {
+      try {
+        await deleteChargingLogic(id);
+        setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
+      } catch (error) {
+        console.error("Failed to delete charging logic", error);
+      }
+    };
 
   const handleClearDrawing = () => {
     if (polygon) {
@@ -352,7 +438,9 @@ const AddLocationPage = () => {
                   Edit
                 </Button>{" "}
                 <Button variant="secondary">Disable</Button>{" "}
-                <Button variant="danger">Delete</Button>
+                <Button variant="danger" onClick={() => handleDelete(logic.id)}>
+                  Delete
+                </Button>
               </td>
             </tr>
           ))}
@@ -552,16 +640,21 @@ const AddLocationPage = () => {
         <Form.Group controlId="formAmountRate">
           <Form.Label>Amount Rate</Form.Label>
           <Form.Control
-            type="text"
-            placeholder="Rate"
-            value={chargingLogicData.amount_rate}
-            onChange={(e) =>
+            as="select"
+            value={chargingLogicData.amount_rate || ""}
+            onChange={(e) => {
+              console.log("Selected Amount Rate:", e.target.value); // Debugging log
               setChargingLogicData({
                 ...chargingLogicData,
                 amount_rate: e.target.value,
-              })
-            }
-          />
+              });
+            }}
+          >
+            <option value="">Select Rate</option>
+            <option value="second">Per Second</option>
+            <option value="minute">Per Minute</option>
+            <option value="hour">Per Hour</option>
+          </Form.Control>
         </Form.Group>
         <Form.Group controlId="formDays">
           <Form.Label>Days</Form.Label>
