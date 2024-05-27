@@ -15,6 +15,8 @@ const AdminHomePage = () => {
     const fetchChargingLogics = async () => {
       try {
         const response = await getChargingLogics();
+        console.log("Charging logics raw response data:", response.data);
+
         const formattedData = response.data.map((logic) => {
           const days = Array.isArray(logic.days)
             ? logic.days.map((day) => {
@@ -60,8 +62,11 @@ const AdminHomePage = () => {
             days,
             months,
             years,
+            location_name: logic.location_name,
           };
         });
+
+        console.log("Formatted charging logics data:", formattedData);
         setChargingLogics(formattedData);
       } catch (error) {
         console.error("Failed to fetch charging logics", error);
@@ -116,7 +121,7 @@ const AdminHomePage = () => {
         <tbody>
           {chargingLogics.map((logic) => (
             <tr key={logic.id}>
-              <td>{logic.location ? logic.location.location_name : "N/A"}</td>
+              <td>{logic.location_name || "N/A"}</td>
               <td>${logic.amount_to_charge}</td>
               <td>{logic.start_time}</td>
               <td>{logic.end_time}</td>

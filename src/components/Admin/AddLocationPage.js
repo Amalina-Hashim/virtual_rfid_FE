@@ -10,7 +10,7 @@ import {
 import {
   createLocation,
   createChargingLogic,
-    getChargingLogics,
+  getChargingLogics,
   deleteChargingLogic,
 } from "../../services/api";
 import { useGoogleMaps } from "../../GoogleMapsProvider";
@@ -112,6 +112,7 @@ const AddLocationPage = () => {
             days,
             months,
             years,
+            location_name: logic.location_name,
           };
         });
 
@@ -351,6 +352,7 @@ const AddLocationPage = () => {
                 }
               })
             : [],
+          location_name: logic.location ? logic.location.location_name : "N/A",
         };
       });
       console.log("Formatted Charging Logics Data:", formattedData);
@@ -373,19 +375,19 @@ const AddLocationPage = () => {
       "Per Month": "month",
     };
 
-    console.log("Display Value:", displayValue); 
+    console.log("Display Value:", displayValue);
 
     return rateMapping[displayValue] || displayValue;
   };
-    
-    const handleDelete = async (id) => {
-      try {
-        await deleteChargingLogic(id);
-        setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
-      } catch (error) {
-        console.error("Failed to delete charging logic", error);
-      }
-    };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteChargingLogic(id);
+      setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
+    } catch (error) {
+      console.error("Failed to delete charging logic", error);
+    }
+  };
 
   const handleClearDrawing = () => {
     if (polygon) {
@@ -420,7 +422,7 @@ const AddLocationPage = () => {
         <tbody>
           {chargingLogics.map((logic) => (
             <tr key={logic.id}>
-              <td>{logic.location ? logic.location.location_name : "N/A"}</td>
+              <td>{logic.location_name || "N/A"}</td>
               <td>${logic.amount_to_charge}</td>
               <td>{logic.start_time}</td>
               <td>{logic.end_time}</td>
