@@ -4,86 +4,76 @@ import { useNavigate } from "react-router-dom";
 import {
   getChargingLogics,
   deleteChargingLogic,
-  disableChargingLogic,
+    disableChargingLogic,
+  deleteLocation,
 } from "../../services/api";
 
 const AdminHomePage = () => {
   const [chargingLogics, setChargingLogics] = useState([]);
   const navigate = useNavigate();
 
+  const fetchChargingLogics = async () => {
+    try {
+      const response = await getChargingLogics();
+      console.log("Charging logics raw response data:", response.data);
+
+      const formattedData = response.data.map((logic) => {
+        const days = Array.isArray(logic.days)
+          ? logic.days.map((day) =>
+              typeof day === "string"
+                ? day.toLowerCase()
+                : day.name.toLowerCase()
+            )
+          : [];
+
+        const months = Array.isArray(logic.months)
+          ? logic.months.map((month) =>
+              typeof month === "string"
+                ? month.toLowerCase()
+                : month.name.toLowerCase()
+            )
+          : [];
+
+        const years = Array.isArray(logic.years)
+          ? logic.years.map((year) => {
+              if (year !== undefined && year !== null) {
+                return typeof year === "object" && year.year !== undefined
+                  ? year.year.toString()
+                  : year.toString();
+              }
+              return "";
+            })
+          : [];
+
+        return {
+          ...logic,
+          days,
+          months,
+          years,
+          location_name: logic.location_name,
+        };
+      });
+
+      console.log("Formatted charging logics data:", formattedData);
+      setChargingLogics(formattedData);
+    } catch (error) {
+      console.error("Failed to fetch charging logics", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchChargingLogics = async () => {
-      try {
-        const response = await getChargingLogics();
-        console.log("Charging logics raw response data:", response.data);
-
-        const formattedData = response.data.map((logic) => {
-          const days = Array.isArray(logic.days)
-            ? logic.days.map((day) => {
-                if (typeof day === "string") {
-                  try {
-                    const parsedDay = JSON.parse(day.replace(/'/g, '"'));
-                    return parsedDay.name.toLowerCase();
-                  } catch (e) {
-                    return day;
-                  }
-                }
-                return day.name.toLowerCase();
-              })
-            : [];
-
-          const months = Array.isArray(logic.months)
-            ? logic.months.map((month) => {
-                if (typeof month === "string") {
-                  try {
-                    const parsedMonth = JSON.parse(month.replace(/'/g, '"'));
-                    return parsedMonth.name.toLowerCase();
-                  } catch (e) {
-                    return month;
-                  }
-                }
-                return month.name.toLowerCase();
-              })
-            : [];
-
-          const years = Array.isArray(logic.years)
-            ? logic.years.map((year) => {
-                if (year !== undefined && year !== null) {
-                  return typeof year === "object" && year.year !== undefined
-                    ? year.year.toString()
-                    : year.toString();
-                }
-                return "";
-              })
-            : [];
-
-          return {
-            ...logic,
-            days,
-            months,
-            years,
-            location_name: logic.location_name,
-          };
-        });
-
-        console.log("Formatted charging logics data:", formattedData);
-        setChargingLogics(formattedData);
-      } catch (error) {
-        console.error("Failed to fetch charging logics", error);
-      }
-    };
-
     fetchChargingLogics();
   }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteChargingLogic(id);
-      setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
-    } catch (error) {
-      console.error("Failed to delete charging logic", error);
-    }
-  };
+const handleDelete = async (id, locationId) => {
+  try {
+    await deleteChargingLogic(id);
+    await deleteLocation(locationId);
+    setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
+  } catch (error) {
+    console.error("Failed to delete charging logic and location", error);
+  }
+};
 
   const handleDisable = async (id) => {
     try {
@@ -98,8 +88,9 @@ const AdminHomePage = () => {
     }
   };
 
-  const handleEdit = (id) => {
+  const handleEdit = async (id) => {
     navigate(`/admin/edit-charging-logic/${id}`);
+    await fetchChargingLogics(); 
   };
 
   return (
@@ -142,7 +133,10 @@ const AdminHomePage = () => {
                 >
                   {logic.enabled ? "Disable" : "Disabled"}
                 </Button>{" "}
-                <Button variant="danger" onClick={() => handleDelete(logic.id)}>
+                <Button
+                  variant="danger"
+                  onClick={() => handleDelete(logic.id, logic.location)}
+                >
                   Delete
                 </Button>
               </td>

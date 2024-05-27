@@ -10,8 +10,9 @@ import {
 import {
   createLocation,
   createChargingLogic,
-  getChargingLogics,
-  deleteChargingLogic,
+    getChargingLogics,
+    deleteChargingLogic,
+  deleteLocation,
 } from "../../services/api";
 import { useGoogleMaps } from "../../GoogleMapsProvider";
 
@@ -69,42 +70,29 @@ const AddLocationPage = () => {
 
         const formattedData = response.data.map((logic) => {
           const days = Array.isArray(logic.days)
-            ? logic.days.map((day) => {
-                if (typeof day === "string") {
-                  try {
-                    const parsedDay = JSON.parse(day.replace(/'/g, '"'));
-                    return parsedDay.name.toLowerCase();
-                  } catch (e) {
-                    return day;
-                  }
-                }
-                return day.name.toLowerCase();
-              })
+            ? logic.days.map((day) =>
+                typeof day === "string"
+                  ? day.toLowerCase()
+                  : day.name.toLowerCase()
+              )
             : [];
 
           const months = Array.isArray(logic.months)
-            ? logic.months.map((month) => {
-                if (typeof month === "string") {
-                  try {
-                    const parsedMonth = JSON.parse(month.replace(/'/g, '"'));
-                    return parsedMonth.name.toLowerCase();
-                  } catch (e) {
-                    return month;
-                  }
-                }
-                return month.name.toLowerCase();
-              })
+            ? logic.months.map((month) =>
+                typeof month === "string"
+                  ? month.toLowerCase()
+                  : month.name.toLowerCase()
+              )
             : [];
 
           const years = Array.isArray(logic.years)
-            ? logic.years.map((year) => {
-                if (year !== undefined && year !== null) {
-                  return typeof year === "object" && year.year !== undefined
+            ? logic.years.map((year) =>
+                year !== undefined && year !== null
+                  ? typeof year === "object" && year.year !== undefined
                     ? year.year.toString()
-                    : year.toString();
-                }
-                return "";
-              })
+                    : year.toString()
+                  : ""
+              )
             : [];
 
           return {
@@ -136,13 +124,7 @@ const AddLocationPage = () => {
             if (mapRef.current) {
               mapRef.current.panTo({ lat: latitude, lng: longitude });
               mapRef.current.setZoom(15);
-              setMarkers([
-                {
-                  lat: latitude,
-                  lng: longitude,
-                  time: new Date(),
-                },
-              ]);
+              setMarkers([{ lat: latitude, lng: longitude, time: new Date() }]);
             }
           },
           (error) => {
@@ -169,14 +151,9 @@ const AddLocationPage = () => {
   const onMapClick = useCallback(
     (event) => {
       if (drawingMode) return;
-
       setMarkers((current) => [
         ...current,
-        {
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng(),
-          time: new Date(),
-        },
+        { lat: event.latLng.lat(), lng: event.latLng.lng(), time: new Date() },
       ]);
       setLocationData((prev) => ({
         ...prev,
@@ -192,10 +169,7 @@ const AddLocationPage = () => {
     const coordinates = polygon
       .getPath()
       .getArray()
-      .map((coord) => ({
-        lat: coord.lat(),
-        lng: coord.lng(),
-      }));
+      .map((coord) => ({ lat: coord.lat(), lng: coord.lng() }));
     console.log("Polygon coordinates:", coordinates);
     setLocationData((prev) => ({
       ...prev,
@@ -239,13 +213,7 @@ const AddLocationPage = () => {
           mapRef.current.panTo({ lat, lng });
           mapRef.current.setZoom(15);
         }
-        setMarkers([
-          {
-            lat,
-            lng,
-            time: new Date(),
-          },
-        ]);
+        setMarkers([{ lat, lng, time: new Date() }]);
       } else {
         console.error("Place geometry is not defined");
       }
@@ -254,10 +222,9 @@ const AddLocationPage = () => {
     }
   };
 
-   const handleEdit = (id) => {
-     navigate(`/admin/edit-charging-logic/${id}`);
-   };
-
+  const handleEdit = (id) => {
+    navigate(`/admin/edit-charging-logic/${id}`);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -276,12 +243,11 @@ const AddLocationPage = () => {
     };
 
     try {
+      console.log("Location Payload:", locationPayload);
       const locationResponse = await createLocation(locationPayload);
       const locationId = locationResponse.data.id;
 
-      console.log("Charging Logic Data:", chargingLogicData);
-      console.log("Years before conversion:", chargingLogicData.years);
-      console.log("Years data type:", typeof chargingLogicData.years[0]);
+      console.log("Location Response:", locationResponse.data);
 
       const amountRate = convertAmountRate(chargingLogicData.amount_rate);
       console.log("Converted Amount Rate:", amountRate);
@@ -306,7 +272,7 @@ const AddLocationPage = () => {
       const chargingLogicResponse = await createChargingLogic(
         chargingLogicPayload
       );
-      console.log("Charging Logic Response:", chargingLogicResponse);
+      console.log("Charging Logic Response:", chargingLogicResponse.data);
 
       const response = await getChargingLogics();
       console.log("Fetched Charging Logics:", response.data);
@@ -314,23 +280,27 @@ const AddLocationPage = () => {
       const formattedData = response.data.map((logic) => {
         console.log("Logic before formatting:", logic);
 
+        const formattedDays = logic.days
+          ? logic.days.map((day) => day.name)
+          : [];
+        const formattedMonths = logic.months
+          ? logic.months.map((month) => month.name)
+          : [];
+        const formattedYears = logic.years
+          ? logic.years.map((year) =>
+              year && year.year !== undefined ? year.year.toString() : ""
+            )
+          : [];
+
         return {
           ...logic,
-          days: logic.days ? logic.days.map((day) => day.name) : [],
-          months: logic.months ? logic.months.map((month) => month.name) : [],
-          years: logic.years
-            ? logic.years.map((year) => {
-                if (year && year.year !== undefined) {
-                  return year.year.toString();
-                } else {
-                  console.warn("Undefined year found:", year);
-                  return ""; // Handle undefined year appropriately
-                }
-              })
-            : [],
+          days: formattedDays,
+          months: formattedMonths,
+          years: formattedYears,
           location_name: logic.location ? logic.location.location_name : "N/A",
         };
       });
+
       console.log("Formatted Charging Logics Data:", formattedData);
       setChargingLogics(formattedData);
 
@@ -356,14 +326,15 @@ const AddLocationPage = () => {
     return rateMapping[displayValue] || displayValue;
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteChargingLogic(id);
-      setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
-    } catch (error) {
-      console.error("Failed to delete charging logic", error);
-    }
-  };
+const handleDelete = async (id, locationId) => {
+  try {
+    await deleteChargingLogic(id);
+    await deleteLocation(locationId);
+    setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
+  } catch (error) {
+    console.error("Failed to delete charging logic and location", error);
+  }
+};
 
   const handleClearDrawing = () => {
     if (polygon) {
@@ -413,7 +384,10 @@ const AddLocationPage = () => {
                   Edit
                 </Button>{" "}
                 <Button variant="secondary">Disable</Button>{" "}
-                <Button variant="danger" onClick={() => handleDelete(logic.id)}>
+                <Button
+                  variant="danger"
+                  onClick={() => handleDelete(logic.id, logic.location)}
+                >
                   Delete
                 </Button>
               </td>
@@ -461,20 +435,14 @@ const AddLocationPage = () => {
           <div>
             <Button
               variant="primary"
-              onClick={() => {
-                setDrawingMode("polygon");
-                console.log("Drawing mode set to polygon");
-              }}
+              onClick={() => setDrawingMode("polygon")}
               disabled={drawingMode === "polygon"}
             >
               Draw Polygon
             </Button>{" "}
             <Button
               variant="primary"
-              onClick={() => {
-                setDrawingMode("circle");
-                console.log("Drawing mode set to circle");
-              }}
+              onClick={() => setDrawingMode("circle")}
               disabled={drawingMode === "circle"}
             >
               Draw Circle
@@ -520,9 +488,7 @@ const AddLocationPage = () => {
                   onPolygonComplete={onPolygonComplete}
                   onCircleComplete={onCircleComplete}
                   drawingMode={drawingMode}
-                  options={{
-                    drawingControl: false,
-                  }}
+                  options={{ drawingControl: false }}
                 />
               )}
             </GoogleMap>
@@ -618,7 +584,7 @@ const AddLocationPage = () => {
             as="select"
             value={chargingLogicData.amount_rate || ""}
             onChange={(e) => {
-              console.log("Selected Amount Rate:", e.target.value); // Debugging log
+              console.log("Selected Amount Rate:", e.target.value);
               setChargingLogicData({
                 ...chargingLogicData,
                 amount_rate: e.target.value,

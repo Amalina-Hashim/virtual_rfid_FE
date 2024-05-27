@@ -46,6 +46,34 @@ const EditChargingLogicPage = () => {
   const [drawingMode, setDrawingMode] = useState(null);
 
   useEffect(() => {
+    const fetchLocationAndChargingLogic = async () => {
+      try {
+        const chargingLogicResponse = await getChargingLogicById(id);
+        const chargingLogic = chargingLogicResponse.data;
+        const locationId = chargingLogic.location; // Ensure correct location ID
+
+        const locationResponse = await getLocationById(locationId);
+        const locationData = locationResponse.data;
+
+        setLocationData({
+          ...locationData,
+          latitude: parseFloat(locationData.latitude),
+          longitude: parseFloat(locationData.longitude),
+          radius:
+            locationData.radius !== "" ? parseFloat(locationData.radius) : null,
+        });
+
+        setChargingLogicData({
+          ...chargingLogic,
+          days: chargingLogic.days || [],
+          months: chargingLogic.months || [],
+          years: chargingLogic.years || [],
+        });
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    };
+
     if (location.state) {
       const { locationData, chargingLogicData } = location.state;
       setLocationData({
@@ -62,33 +90,6 @@ const EditChargingLogicPage = () => {
         years: chargingLogicData.years || [],
       });
     } else {
-      const fetchLocationAndChargingLogic = async () => {
-        try {
-          const locationResponse = await getLocationById(id);
-          const locationData = locationResponse.data;
-          setLocationData({
-            ...locationData,
-            latitude: parseFloat(locationData.latitude),
-            longitude: parseFloat(locationData.longitude),
-            radius:
-              locationData.radius !== ""
-                ? parseFloat(locationData.radius)
-                : null,
-          });
-
-          const chargingLogicResponse = await getChargingLogicById(id);
-          const chargingLogic = chargingLogicResponse.data;
-          setChargingLogicData({
-            ...chargingLogic,
-            days: chargingLogic.days || [],
-            months: chargingLogic.months || [],
-            years: chargingLogic.years || [],
-          });
-        } catch (error) {
-          console.error("Error fetching data: ", error);
-        }
-      };
-
       fetchLocationAndChargingLogic();
     }
   }, [id, location.state]);
@@ -122,6 +123,10 @@ const EditChargingLogicPage = () => {
 
       console.log("Updating charging logic with data:", updatedChargingLogic);
       await updateChargingLogic(chargingLogicData.id, updatedChargingLogic);
+
+      const updatedLocation = await getLocationById(formattedLocationData.id);
+      setLocationData(updatedLocation.data);
+
       navigate("/admin/home");
     } catch (error) {
       console.error("Error updating data: ", error);
@@ -141,7 +146,7 @@ const EditChargingLogicPage = () => {
       polygon_points: polygonPath,
       radius: null,
     });
-    setPolygon(polygon); // Persist polygon
+    setPolygon(polygon);
     setDrawingMode(null);
   };
 
@@ -153,7 +158,7 @@ const EditChargingLogicPage = () => {
       radius: circle.getRadius(),
       polygon_points: [],
     });
-    setCircle(circle); // Persist circle
+    setCircle(circle);
     setDrawingMode(null);
   };
 
@@ -273,24 +278,34 @@ const EditChargingLogicPage = () => {
                 )}
               </GoogleMap>
             ) : (
-              <div>Loading Map...</div>
+              <p>Loading...</p>
             )}
           </div>
         </Form.Group>
         <Form.Group controlId="formLatitude">
           <Form.Label>Latitude</Form.Label>
           <Form.Control
-            type="text"
+            type="number"
             value={locationData.latitude || ""}
-            readOnly
+            onChange={(e) =>
+              setLocationData({
+                ...locationData,
+                latitude: parseFloat(e.target.value),
+              })
+            }
           />
         </Form.Group>
         <Form.Group controlId="formLongitude">
           <Form.Label>Longitude</Form.Label>
           <Form.Control
-            type="text"
+            type="number"
             value={locationData.longitude || ""}
-            readOnly
+            onChange={(e) =>
+              setLocationData({
+                ...locationData,
+                longitude: parseFloat(e.target.value),
+              })
+            }
           />
         </Form.Group>
         <Form.Group controlId="formRadius">
@@ -298,126 +313,124 @@ const EditChargingLogicPage = () => {
           <Form.Control
             type="number"
             value={locationData.radius || ""}
-            readOnly
-          />
-        </Form.Group>
-        <Form.Group controlId="formPolygonPoints">
-          <Form.Label>Polygon Points</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={5}
-            value={
-              locationData.polygon_points.length
-                ? JSON.stringify(locationData.polygon_points, null, 2)
-                : ""
-            }
-            readOnly
-          />
-        </Form.Group>
-        <h2>Charging Logic</h2>
-        <Form.Group controlId="formStartTime">
-          <Form.Label>Start Time</Form.Label>
-          <Form.Control
-            type="time"
-            value={chargingLogicData.start_time || ""}
             onChange={(e) =>
-              setChargingLogicData({
-                ...chargingLogicData,
-                start_time: e.target.value,
+              setLocationData({
+                ...locationData,
+                radius: parseFloat(e.target.value),
               })
             }
           />
         </Form.Group>
-        <Form.Group controlId="formEndTime">
-          <Form.Label>End Time</Form.Label>
-          <Form.Control
-            type="time"
-            value={chargingLogicData.end_time || ""}
-            onChange={(e) =>
-              setChargingLogicData({
-                ...chargingLogicData,
-                end_time: e.target.value,
-              })
-            }
-          />
-        </Form.Group>
-        <Form.Group controlId="formAmountToCharge">
-          <Form.Label>Amount to Charge</Form.Label>
-          <Form.Control
-            type="number"
-            value={chargingLogicData.amount_to_charge || ""}
-            onChange={(e) =>
-              setChargingLogicData({
-                ...chargingLogicData,
-                amount_to_charge: e.target.value,
-              })
-            }
-          />
-        </Form.Group>
-        <Form.Group controlId="formAmountRate">
-          <Form.Label>Amount Rate</Form.Label>
-          <Form.Control
-            as="select"
-            value={chargingLogicData.amount_rate || ""}
-            onChange={(e) =>
-              setChargingLogicData({
-                ...chargingLogicData,
-                amount_rate: e.target.value,
-              })
-            }
-          >
-            <option value="">Select Rate</option>
-            <option value="second">Per Second</option>
-            <option value="minute">Per Minute</option>
-            <option value="hour">Per Hour</option>
-            <option value="day">Per Day</option>
-            <option value="month">Per Month</option>
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="formDays">
-          <Form.Label>Days</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter days (e.g., Mon,Tue,Wed)"
-            value={chargingLogicData.days.join(",")}
-            onChange={(e) =>
-              setChargingLogicData({
-                ...chargingLogicData,
-                days: e.target.value.split(","),
-              })
-            }
-          />
-        </Form.Group>
-        <Form.Group controlId="formMonths">
-          <Form.Label>Months</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter months (e.g., Jan,Feb,Mar)"
-            value={chargingLogicData.months.join(",")}
-            onChange={(e) =>
-              setChargingLogicData({
-                ...chargingLogicData,
-                months: e.target.value.split(","),
-              })
-            }
-          />
-        </Form.Group>
-        <Form.Group controlId="formYears">
-          <Form.Label>Years</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter years (e.g., 2021,2022)"
-            value={chargingLogicData.years.join(",")}
-            onChange={(e) =>
-              setChargingLogicData({
-                ...chargingLogicData,
-                years: e.target.value.split(","),
-              })
-            }
-          />
+        <Form.Group controlId="formChargingLogic">
+          <Form.Label>Charging Logic</Form.Label>
+          <Row>
+            <Col>
+              <Form.Group controlId="formStartTime">
+                <Form.Label>Start Time</Form.Label>
+                <Form.Control
+                  type="time"
+                  value={chargingLogicData.start_time}
+                  onChange={(e) =>
+                    setChargingLogicData({
+                      ...chargingLogicData,
+                      start_time: e.target.value,
+                    })
+                  }
+                />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group controlId="formEndTime">
+                <Form.Label>End Time</Form.Label>
+                <Form.Control
+                  type="time"
+                  value={chargingLogicData.end_time}
+                  onChange={(e) =>
+                    setChargingLogicData({
+                      ...chargingLogicData,
+                      end_time: e.target.value,
+                    })
+                  }
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Group controlId="formAmountToCharge">
+                <Form.Label>Amount to Charge</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={chargingLogicData.amount_to_charge}
+                  onChange={(e) =>
+                    setChargingLogicData({
+                      ...chargingLogicData,
+                      amount_to_charge: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group controlId="formAmountRate">
+                <Form.Label>Amount Rate</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={chargingLogicData.amount_rate}
+                  onChange={(e) =>
+                    setChargingLogicData({
+                      ...chargingLogicData,
+                      amount_rate: e.target.value,
+                    })
+                  }
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+          <Form.Group controlId="formDays">
+            <Form.Label>Days</Form.Label>
+            <Form.Control
+              type="text"
+              value={chargingLogicData.days.join(", ")}
+              onChange={(e) =>
+                setChargingLogicData({
+                  ...chargingLogicData,
+                  days: e.target.value.split(",").map((day) => day.trim()),
+                })
+              }
+            />
+          </Form.Group>
+          <Form.Group controlId="formMonths">
+            <Form.Label>Months</Form.Label>
+            <Form.Control
+              type="text"
+              value={chargingLogicData.months.join(", ")}
+              onChange={(e) =>
+                setChargingLogicData({
+                  ...chargingLogicData,
+                  months: e.target.value
+                    .split(",")
+                    .map((month) => month.trim()),
+                })
+              }
+            />
+          </Form.Group>
+          <Form.Group controlId="formYears">
+            <Form.Label>Years</Form.Label>
+            <Form.Control
+              type="text"
+              value={chargingLogicData.years.join(", ")}
+              onChange={(e) =>
+                setChargingLogicData({
+                  ...chargingLogicData,
+                  years: e.target.value.split(",").map((year) => year.trim()),
+                })
+              }
+            />
+          </Form.Group>
         </Form.Group>
         <Button variant="primary" type="submit">
-          Save
+          Update
         </Button>
       </Form>
     </Container>

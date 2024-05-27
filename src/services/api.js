@@ -21,7 +21,9 @@ export const getUsers = () => api.get("/users/");
 // Location APIs
 export const createLocation = (data) => api.post("/locations/", data);
 export const getLocationById = (id) => api.get(`/locations/${id}/`);
-export const updateLocation = (id, data) => api.patch(`/locations/${id}/`, data);
+export const deleteLocation = (id) => api.delete(`/locations/${id}/`);
+export const updateLocation = (id, data) =>
+  api.patch(`/locations/${id}/`, data);
 
 // Charging Logic APIs
 export const getChargingLogics = () => api.get("/charging-logics/");
@@ -56,4 +58,3 @@ export const createYear = (data) => api.post("/years/", data);
 export const calculateCharge = (data) => api.post("/calculate-charge/", data);
 
 export default api;
-
