@@ -254,34 +254,10 @@ const AddLocationPage = () => {
     }
   };
 
-  const handleEditClick = (locationData, chargingLogic) => {
-    console.log("Edit button clicked");
+   const handleEdit = (id) => {
+     navigate(`/admin/edit-charging-logic/${id}`);
+   };
 
-    const state = {
-      locationData: {
-        ...locationData,
-        latitude: parseFloat(locationData.latitude).toFixed(6),
-        longitude: parseFloat(locationData.longitude).toFixed(6),
-        radius:
-          locationData.radius !== null &&
-          !isNaN(parseFloat(locationData.radius))
-            ? parseFloat(locationData.radius).toFixed(2)
-            : null,
-      },
-      chargingLogicData: {
-        ...chargingLogic,
-        days: chargingLogic.days.map((day) => day),
-        months: chargingLogic.months.map((month) => month),
-        years: chargingLogic.years.map((year) => year),
-      },
-    };
-
-    console.log("Navigating to /edit with state:", state);
-
-    setTimeout(() => {
-      navigate(`/edit/${chargingLogic.id}`, { state });
-    }, 100);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -433,10 +409,7 @@ const AddLocationPage = () => {
               </td>
               <td>{logic.amount_rate}</td>
               <td>
-                <Button
-                  variant="primary"
-                  onClick={() => handleEditClick(locationData, logic)}
-                >
+                <Button variant="primary" onClick={() => handleEdit(logic.id)}>
                   Edit
                 </Button>{" "}
                 <Button variant="secondary">Disable</Button>{" "}

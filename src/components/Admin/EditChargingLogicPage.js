@@ -95,9 +95,23 @@ const EditChargingLogicPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const formattedLocationData = {
+      ...locationData,
+      latitude: locationData.latitude
+        ? parseFloat(locationData.latitude.toFixed(7))
+        : null,
+      longitude: locationData.longitude
+        ? parseFloat(locationData.longitude.toFixed(7))
+        : null,
+      radius: locationData.radius
+        ? parseFloat(locationData.radius.toFixed(2))
+        : null,
+    };
+
     try {
-      console.log("Updating location with data:", locationData);
-      await updateLocation(locationData.id, locationData);
+      console.log("Updating location with data:", formattedLocationData);
+      await updateLocation(formattedLocationData.id, formattedLocationData);
 
       const updatedChargingLogic = {
         ...chargingLogicData,
