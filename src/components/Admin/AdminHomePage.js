@@ -96,7 +96,7 @@ const handleDelete = async (id, locationId) => {
   return (
     <Container>
       <h1>Hello, Admin</h1>
-      <h2>Your Current Location(s):</h2>
+      <h3>Your Current Location(s):</h3>
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -135,6 +135,7 @@ const handleDelete = async (id, locationId) => {
                 </Button>{" "}
                 <Button
                   variant="danger"
+                  style={{ marginTop: "8px" }}
                   onClick={() => handleDelete(logic.id, logic.location)}
                 >
                   Delete

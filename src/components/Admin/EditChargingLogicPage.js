@@ -50,7 +50,7 @@ const EditChargingLogicPage = () => {
       try {
         const chargingLogicResponse = await getChargingLogicById(id);
         const chargingLogic = chargingLogicResponse.data;
-        const locationId = chargingLogic.location; // Ensure correct location ID
+        const locationId = chargingLogic.location; 
 
         const locationResponse = await getLocationById(locationId);
         const locationData = locationResponse.data;
@@ -198,7 +198,7 @@ const EditChargingLogicPage = () => {
   return (
     <Container>
       <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="formLocationName">
+        <Form.Group controlId="formLocationName" style={{ marginTop: "15px" }}>
           <Form.Label>Location Name</Form.Label>
           <Form.Control
             type="text"
@@ -212,7 +212,7 @@ const EditChargingLogicPage = () => {
             }
           />
         </Form.Group>
-        <Form.Group controlId="formAddressSearch">
+        <Form.Group controlId="formAddressSearch" style={{ marginTop: "10px" }}>
           <Form.Label>Address Name</Form.Label>
           <Form.Control
             type="text"
@@ -223,7 +223,10 @@ const EditChargingLogicPage = () => {
             }
           />
         </Form.Group>
-        <Form.Group controlId="formSelectDrawingMode">
+        <Form.Group
+          controlId="formSelectDrawingMode"
+          style={{ marginTop: "10px" }}
+        >
           <Form.Label>Select Drawing Mode:</Form.Label>
           <div>
             <Button
@@ -282,7 +285,7 @@ const EditChargingLogicPage = () => {
             )}
           </div>
         </Form.Group>
-        <Form.Group controlId="formLatitude">
+        <Form.Group controlId="formLatitude" style={{ marginTop: "10px" }}>
           <Form.Label>Latitude</Form.Label>
           <Form.Control
             type="number"
@@ -295,7 +298,7 @@ const EditChargingLogicPage = () => {
             }
           />
         </Form.Group>
-        <Form.Group controlId="formLongitude">
+        <Form.Group controlId="formLongitude" style={{ marginTop: "10px" }}>
           <Form.Label>Longitude</Form.Label>
           <Form.Control
             type="number"
@@ -308,7 +311,7 @@ const EditChargingLogicPage = () => {
             }
           />
         </Form.Group>
-        <Form.Group controlId="formRadius">
+        <Form.Group controlId="formRadius" style={{ marginTop: "10px" }}>
           <Form.Label>Radius (meters)</Form.Label>
           <Form.Control
             type="number"
@@ -321,7 +324,7 @@ const EditChargingLogicPage = () => {
             }
           />
         </Form.Group>
-        <Form.Group controlId="formChargingLogic">
+        <Form.Group controlId="formChargingLogic" style={{ marginTop: "10px" }}>
           <Form.Label>Charging Logic</Form.Label>
           <Row>
             <Col>
@@ -357,7 +360,10 @@ const EditChargingLogicPage = () => {
           </Row>
           <Row>
             <Col>
-              <Form.Group controlId="formAmountToCharge">
+              <Form.Group
+                controlId="formAmountToCharge"
+                style={{ marginTop: "10px" }}
+              >
                 <Form.Label>Amount to Charge</Form.Label>
                 <Form.Control
                   type="number"
@@ -372,22 +378,33 @@ const EditChargingLogicPage = () => {
               </Form.Group>
             </Col>
             <Col>
-              <Form.Group controlId="formAmountRate">
+              <Form.Group
+                controlId="formAmountRate"
+                style={{ marginTop: "10px" }}
+              >
                 <Form.Label>Amount Rate</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={chargingLogicData.amount_rate}
-                  onChange={(e) =>
+                <Form.Select
+                  value={chargingLogicData.amount_rate || ""}
+                  onChange={(e) => {
+                    console.log("Selected Amount Rate:", e.target.value);
                     setChargingLogicData({
                       ...chargingLogicData,
                       amount_rate: e.target.value,
-                    })
-                  }
-                />
+                    });
+                  }}
+                >
+                  <option value="">Select Rate</option>
+                  <option value="second">Per Second</option>
+                  <option value="minute">Per Minute</option>
+                  <option value="hour">Per Hour</option>
+                  <option value="day">Per Day</option>
+                  <option value="week">Per Week</option>
+                  <option value="month">Per Month</option>
+                </Form.Select>
               </Form.Group>
             </Col>
           </Row>
-          <Form.Group controlId="formDays">
+          <Form.Group controlId="formDays" style={{ marginTop: "10px" }}>
             <Form.Label>Days</Form.Label>
             <Form.Control
               type="text"
@@ -400,7 +417,7 @@ const EditChargingLogicPage = () => {
               }
             />
           </Form.Group>
-          <Form.Group controlId="formMonths">
+          <Form.Group controlId="formMonths" style={{ marginTop: "10px" }}>
             <Form.Label>Months</Form.Label>
             <Form.Control
               type="text"
@@ -415,7 +432,7 @@ const EditChargingLogicPage = () => {
               }
             />
           </Form.Group>
-          <Form.Group controlId="formYears">
+          <Form.Group controlId="formYears" style={{ marginTop: "10px" }}>
             <Form.Label>Years</Form.Label>
             <Form.Control
               type="text"
@@ -429,7 +446,7 @@ const EditChargingLogicPage = () => {
             />
           </Form.Group>
         </Form.Group>
-        <Button variant="primary" type="submit">
+        <Button variant="primary" type="submit" style={{ marginTop: "15px" }}>
           Update
         </Button>
       </Form>
