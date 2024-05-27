@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button, Form, Container, Table, Row, Col } from "react-bootstrap";
-
 import {
   GoogleMap,
-  useLoadScript,
-  DrawingManager,
   Marker,
+  DrawingManager,
   Autocomplete,
 } from "@react-google-maps/api";
 import {
@@ -13,8 +12,8 @@ import {
   createChargingLogic,
   getChargingLogics,
 } from "../../services/api";
+import { useGoogleMaps } from "../../GoogleMapsProvider";
 
-const libraries = ["places", "drawing"];
 const mapContainerStyle = {
   height: "400px",
   width: "100%",
@@ -31,11 +30,8 @@ const options = {
 };
 
 const AddLocationPage = () => {
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
-
+  const navigate = useNavigate();
+  const { isLoaded } = useGoogleMaps();
   const [locationData, setLocationData] = useState({
     country: "SINGAPORE",
     latitude: null,
@@ -58,6 +54,8 @@ const AddLocationPage = () => {
 
   const [markers, setMarkers] = useState([]);
   const [chargingLogics, setChargingLogics] = useState([]);
+  const [circle, setCircle] = useState(null);
+  const [polygon, setPolygon] = useState(null);
   const mapRef = useRef();
   const autocompleteRef = useRef();
   const [drawingMode, setDrawingMode] = useState(null);
@@ -66,13 +64,19 @@ const AddLocationPage = () => {
     const fetchChargingLogics = async () => {
       try {
         const response = await getChargingLogics();
-        setChargingLogics(response.data);
+        const formattedData = response.data.map((logic) => ({
+          ...logic,
+          days: logic.days ? logic.days.map((day) => day.name) : [], 
+          months: logic.months ? logic.months.map((month) => month.name) : [], 
+          years: logic.years
+            ? logic.years.map((year) => year.year.toString())
+            : [], 
+        }));
+        setChargingLogics(formattedData);
       } catch (error) {
         console.error("Failed to fetch charging logics", error);
       }
     };
-
-    fetchChargingLogics();
 
     const fetchGeolocation = async () => {
       if (navigator.geolocation) {
@@ -108,6 +112,8 @@ const AddLocationPage = () => {
     if (isLoaded) {
       fetchGeolocation();
     }
+
+    fetchChargingLogics();
   }, [isLoaded]);
 
   const onMapLoad = useCallback((map) => {
@@ -127,13 +133,13 @@ const AddLocationPage = () => {
           time: new Date(),
         },
       ]);
-      setLocationData({
-        ...locationData,
+      setLocationData((prev) => ({
+        ...prev,
         latitude: event.latLng.lat(),
         longitude: event.latLng.lng(),
-      });
+      }));
     },
-    [locationData, drawingMode]
+    [drawingMode]
   );
 
   const onPolygonComplete = (polygon) => {
@@ -146,12 +152,12 @@ const AddLocationPage = () => {
         lng: coord.lng(),
       }));
     console.log("Polygon coordinates:", coordinates);
-    setLocationData({
-      ...locationData,
+    setLocationData((prev) => ({
+      ...prev,
       polygon_points: coordinates,
       radius: null,
-    });
-    polygon.setMap(null);
+    }));
+    setPolygon(polygon); // Persist polygon
     setDrawingMode(null);
   };
 
@@ -161,40 +167,75 @@ const AddLocationPage = () => {
     const radius = circle.getRadius();
     console.log("Circle center:", { lat: center.lat(), lng: center.lng() });
     console.log("Circle radius:", radius);
-    setLocationData({
-      ...locationData,
+    setLocationData((prev) => ({
+      ...prev,
       latitude: center.lat(),
       longitude: center.lng(),
       radius: radius,
       polygon_points: [],
-    });
-    circle.setMap(null);
+    }));
+    setCircle(circle); // Persist circle
     setDrawingMode(null);
   };
 
   const onPlaceChanged = () => {
-    const place = autocompleteRef.current.getPlace();
-    if (place.geometry) {
-      const lat = place.geometry.location.lat();
-      const lng = place.geometry.location.lng();
-      setLocationData({
-        ...locationData,
-        address_name: place.formatted_address,
-        latitude: lat,
-        longitude: lng,
-      });
-      if (mapRef.current) {
-        mapRef.current.panTo({ lat, lng });
-        mapRef.current.setZoom(15);
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.geometry) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setLocationData((prev) => ({
+          ...prev,
+          address_name: place.formatted_address,
+          latitude: lat,
+          longitude: lng,
+        }));
+        if (mapRef.current) {
+          mapRef.current.panTo({ lat, lng });
+          mapRef.current.setZoom(15);
+        }
+        setMarkers([
+          {
+            lat,
+            lng,
+            time: new Date(),
+          },
+        ]);
+      } else {
+        console.error("Place geometry is not defined");
       }
-      setMarkers([
-        {
-          lat,
-          lng,
-          time: new Date(),
-        },
-      ]);
+    } else {
+      console.error("Autocomplete reference is not defined");
     }
+  };
+
+  const handleEditClick = (locationData, chargingLogic) => {
+    console.log("Edit button clicked");
+
+    const state = {
+      locationData: {
+        ...locationData,
+        latitude: parseFloat(locationData.latitude).toFixed(6),
+        longitude: parseFloat(locationData.longitude).toFixed(6),
+        radius:
+          locationData.radius !== null &&
+          !isNaN(parseFloat(locationData.radius))
+            ? parseFloat(locationData.radius).toFixed(2)
+            : null,
+      },
+      chargingLogicData: {
+        ...chargingLogic,
+        days: chargingLogic.days.map((day) => day),
+        months: chargingLogic.months.map((month) => month),
+        years: chargingLogic.years.map((year) => year),
+      },
+    };
+
+    console.log("Navigating to /edit with state:", state);
+
+    setTimeout(() => {
+      navigate(`/edit/${chargingLogic.id}`, { state });
+    }, 100);
   };
 
   const handleSubmit = async (e) => {
@@ -206,7 +247,10 @@ const AddLocationPage = () => {
       longitude: parseFloat(locationData.longitude).toFixed(6),
       address_name: locationData.address_name,
       location_name: locationData.location_name,
-      radius: parseFloat(locationData.radius).toFixed(2),
+      radius:
+        locationData.radius !== "" && !isNaN(parseFloat(locationData.radius))
+          ? parseFloat(locationData.radius).toFixed(2)
+          : null,
       polygon_points: locationData.polygon_points,
     };
 
@@ -219,7 +263,10 @@ const AddLocationPage = () => {
       const chargingLogicPayload = {
         ...chargingLogicData,
         location: locationId,
-        amount_rate: convertAmountRate(chargingLogicData.amount_rate), // Correct the amount_rate
+        amount_rate: convertAmountRate(chargingLogicData.amount_rate),
+        days: chargingLogicData.days.map((day) => ({ name: day })),
+        months: chargingLogicData.months.map((month) => ({ name: month })),
+        years: chargingLogicData.years.map((year) => parseInt(year, 10)), // Convert to integers
       };
 
       console.log("Charging Logic payload:", chargingLogicPayload);
@@ -227,7 +274,19 @@ const AddLocationPage = () => {
       await createChargingLogic(chargingLogicPayload);
 
       const response = await getChargingLogics();
-      setChargingLogics(response.data);
+      const formattedData = response.data.map((logic) => ({
+        ...logic,
+        days: logic.days.map((day) => day.name),
+        months: logic.months.map((month) => month.name),
+        years: logic.years
+          ? logic.years.map((year) => year.year.toString())
+          : [], // Check for undefined years
+      }));
+      setChargingLogics(formattedData);
+
+      navigate("/admin/home", {
+        state: { locationData, chargingLogicData },
+      });
     } catch (error) {
       console.error("Error creating location and charging logic", error);
     }
@@ -242,8 +301,19 @@ const AddLocationPage = () => {
     return rateMapping[displayValue];
   };
 
+  const handleClearDrawing = () => {
+    if (polygon) {
+      polygon.setMap(null);
+      setPolygon(null);
+    }
+    if (circle) {
+      circle.setMap(null);
+      setCircle(null);
+    }
+    setDrawingMode(null);
+  };
 
-
+  if (!isLoaded) return <div>Loading maps...</div>;
 
   return (
     <Container>
@@ -256,7 +326,7 @@ const AddLocationPage = () => {
             <th>Amount</th>
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Days/Months</th>
+            <th>Days/Months/Years</th>
             <th>Charge Rate</th>
             <th>Actions</th>
           </tr>
@@ -264,14 +334,23 @@ const AddLocationPage = () => {
         <tbody>
           {chargingLogics.map((logic) => (
             <tr key={logic.id}>
-              <td>{logic.location.location_name}</td>
+              <td>{logic.location ? logic.location.location_name : "N/A"}</td>
               <td>${logic.amount_to_charge}</td>
               <td>{logic.start_time}</td>
               <td>{logic.end_time}</td>
-              <td>{logic.days.map((day) => day.name).join(", ")}</td>
+              <td>
+                Days: {logic.days.join(", ")} <br />
+                Months: {logic.months.join(", ")} <br />
+                Years: {logic.years.join(", ")}
+              </td>
               <td>{logic.amount_rate}</td>
               <td>
-                <Button variant="primary">Edit</Button>{" "}
+                <Button
+                  variant="primary"
+                  onClick={() => handleEditClick(locationData, logic)}
+                >
+                  Edit
+                </Button>{" "}
                 <Button variant="secondary">Disable</Button>{" "}
                 <Button variant="danger">Delete</Button>
               </td>
@@ -339,10 +418,7 @@ const AddLocationPage = () => {
             </Button>{" "}
             <Button
               variant="secondary"
-              onClick={() => {
-                setDrawingMode(null);
-                console.log("Drawing mode cleared");
-              }}
+              onClick={handleClearDrawing}
               disabled={!drawingMode}
             >
               Clear Drawing

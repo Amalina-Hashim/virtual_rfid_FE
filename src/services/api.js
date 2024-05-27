@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", // Change this to your actual backend URL
+  baseURL: "http://localhost:8000/api", // Change this to actual backend URL later!
   headers: {
     "Content-Type": "application/json",
   },
@@ -20,9 +20,12 @@ export const getUsers = () => api.get("/users/");
 
 // Location APIs
 export const createLocation = (data) => api.post("/locations/", data);
+export const getLocationById = (id) => api.get(`/locations/${id}/`);
+export const updateLocation = (id, data) => api.patch(`/locations/${id}/`, data);
 
 // Charging Logic APIs
 export const getChargingLogics = () => api.get("/charging-logics/");
+export const getChargingLogicById = (id) => api.get(`/charging-logics/${id}/`);
 export const createChargingLogic = (data) =>
   api.post("/charging-logics/", data);
 export const updateChargingLogic = (id, data) =>
@@ -53,3 +56,4 @@ export const createYear = (data) => api.post("/years/", data);
 export const calculateCharge = (data) => api.post("/calculate-charge/", data);
 
 export default api;
+

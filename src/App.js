@@ -1,13 +1,16 @@
 import React from "react";
-import AppRoutes from "../src/Routes";
+import { GoogleMapsProvider } from "./GoogleMapsProvider";
+import AppRoutes from "./Routes";
 import "./App.css";
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <AppRoutes />
-    </div>
+    <GoogleMapsProvider>
+      <div className="App">
+        <AppRoutes />
+      </div>
+    </GoogleMapsProvider>
   );
-}
+};
 
 export default App;

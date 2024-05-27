@@ -15,7 +15,19 @@ const AdminHomePage = () => {
     const fetchChargingLogics = async () => {
       try {
         const response = await getChargingLogics();
-        setChargingLogics(response.data);
+        const formattedData = response.data.map((logic) => ({
+          ...logic,
+          days: logic.days.map((day) =>
+            typeof day === "string" ? { name: day } : day
+          ),
+          months: logic.months.map((month) =>
+            typeof month === "string" ? { name: month } : month
+          ),
+          years: logic.years.map((year) =>
+            typeof year === "number" ? { name: year.toString() } : year
+          ),
+        }));
+        setChargingLogics(formattedData);
       } catch (error) {
         console.error("Failed to fetch charging logics", error);
       }
@@ -61,7 +73,7 @@ const AdminHomePage = () => {
             <th>Amount</th>
             <th>Start Time</th>
             <th>End Time</th>
-            <th>Days/Months</th>
+            <th>Days/Months/Years</th>
             <th>Charge Rate</th>
             <th>Actions</th>
           </tr>
@@ -69,11 +81,15 @@ const AdminHomePage = () => {
         <tbody>
           {chargingLogics.map((logic) => (
             <tr key={logic.id}>
-              <td>{logic.location.location_name}</td>
+              <td>{logic.location ? logic.location.location_name : "N/A"}</td>
               <td>${logic.amount_to_charge}</td>
               <td>{logic.start_time}</td>
               <td>{logic.end_time}</td>
-              <td>{logic.days.map((day) => day.name).join(", ")}</td>
+              <td>
+              Days: {logic.days.map((day) => day.name).join(", ")} <br />
+              Months: {logic.months.map((month) => month.name).join(", ")} <br />
+              Years: {logic.years.map((year) => year.year).join(", ")}
+            </td>
               <td>{logic.amount_rate}</td>
               <td>
                 <Button variant="primary" onClick={() => handleEdit(logic.id)}>
