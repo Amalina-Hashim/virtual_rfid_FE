@@ -235,10 +235,9 @@ const AddLocationPage = () => {
       longitude: parseFloat(locationData.longitude).toFixed(6),
       address_name: locationData.address_name,
       location_name: locationData.location_name,
-      radius:
-        locationData.radius !== "" && !isNaN(parseFloat(locationData.radius))
-          ? parseFloat(locationData.radius).toFixed(2)
-          : null,
+      radius: locationData.radius
+        ? parseFloat(locationData.radius).toFixed(2)
+        : null,
       polygon_points: locationData.polygon_points,
     };
 
@@ -254,7 +253,7 @@ const AddLocationPage = () => {
 
       const chargingLogicPayload = {
         ...chargingLogicData,
-        location: locationId,
+        location: locationResponse.data, // Pass the full location object
         amount_rate: amountRate,
         days: chargingLogicData.days
           ? chargingLogicData.days.map((day) => day.toString())
@@ -304,9 +303,7 @@ const AddLocationPage = () => {
       console.log("Formatted Charging Logics Data:", formattedData);
       setChargingLogics(formattedData);
 
-      navigate("/admin/home", {
-        state: { locationData, chargingLogicData },
-      });
+      navigate("/admin/home", { state: { locationData, chargingLogicData } });
     } catch (error) {
       console.error("Error creating location and charging logic", error);
     }
@@ -329,7 +326,7 @@ const AddLocationPage = () => {
 const handleDelete = async (id, locationId) => {
   try {
     await deleteChargingLogic(id);
-    await deleteLocation(locationId);
+    await deleteLocation(locationId.id); 
     setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
   } catch (error) {
     console.error("Failed to delete charging logic and location", error);

@@ -3,7 +3,7 @@ import { Nav } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../services/auth";
 
-const Sidebar = () => {
+const UserSidebar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -13,13 +13,16 @@ const Sidebar = () => {
 
   return (
     <Nav className="flex-column">
-      <NavLink to="/admin/home" className="nav-link">
+      <NavLink to="/user/home" className="nav-link">
         Home
       </NavLink>
-      <NavLink to="/admin/add-location" className="nav-link">
-        Add Location
+      <NavLink to="/user/profile" className="nav-link">
+        Profile
       </NavLink>
-      <NavLink to="/admin/transactions" className="nav-link">
+      <NavLink to="/user/top-up" className="nav-link">
+        Top Up
+      </NavLink>
+      <NavLink to="/user/transactions" className="nav-link">
         Transactions
       </NavLink>
       <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
@@ -27,4 +30,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default UserSidebar;

@@ -1,19 +1,24 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Form, Button, Container, Row, Col } from "react-bootstrap";
-import { login } from "../../services/auth"; 
+import { login, getUser } from "../../services/api";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user"); 
+  const [role, setRole] = useState("user");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await login({ username, password });
-      const userRole = localStorage.getItem("userRole");
+      const response = await login({ username, password });
+      localStorage.setItem("authToken", response.data.token);
+      const userResponse = await getUser();
+      const userRole = userResponse.data.role;
+
+      localStorage.setItem("userRole", userRole);
+
       if (userRole === "admin") {
         navigate("/admin/home");
       } else {
@@ -40,6 +45,7 @@ const Login = () => {
                 placeholder="Enter username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
               />
             </Form.Group>
             <Form.Group
@@ -52,6 +58,7 @@ const Login = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </Form.Group>
             <Form.Group controlId="formBasicRole" style={{ textAlign: "left" }}>

@@ -17,6 +17,12 @@ api.interceptors.request.use((config) => {
 
 // User APIs
 export const getUsers = () => api.get("/users/");
+export const getUser = () => api.get("/current-user/");
+export const register = (data) => api.post("/register/", data);
+export const login = (data) => api.post("/token/", data);
+
+// Balance API
+export const getBalance = () => api.get("/balance/");
 
 // Location APIs
 export const createLocation = (data) => api.post("/locations/", data);
@@ -37,24 +43,13 @@ export const deleteChargingLogic = (id) =>
 export const disableChargingLogic = (id) =>
   api.patch(`/charging-logics/${id}/disable/`);
 
+// Get charging logic by location
+export const getChargingLogicByLocation = (coords) =>
+  api.post("/charging-logic/location/", coords);
+
 // Transaction History APIs
 export const getTransactionHistories = () => api.get("/transaction-histories/");
 export const createTransactionHistory = (data) =>
   api.post("/transaction-histories/", data);
-
-// Day APIs
-export const getDays = () => api.get("/days/");
-export const createDay = (data) => api.post("/days/", data);
-
-// Month APIs
-export const getMonths = () => api.get("/months/");
-export const createMonth = (data) => api.post("/months/", data);
-
-// Year APIs
-export const getYears = () => api.get("/years/");
-export const createYear = (data) => api.post("/years/", data);
-
-// calculateCharge function
-export const calculateCharge = (data) => api.post("/calculate-charge/", data);
 
 export default api;

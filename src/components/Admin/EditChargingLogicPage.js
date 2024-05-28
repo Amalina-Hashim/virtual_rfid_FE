@@ -50,7 +50,7 @@ const EditChargingLogicPage = () => {
       try {
         const chargingLogicResponse = await getChargingLogicById(id);
         const chargingLogic = chargingLogicResponse.data;
-        const locationId = chargingLogic.location; 
+        const locationId = chargingLogic.location.id; 
 
         const locationResponse = await getLocationById(locationId);
         const locationData = locationResponse.data;
@@ -94,6 +94,7 @@ const EditChargingLogicPage = () => {
     }
   }, [id, location.state]);
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -119,6 +120,7 @@ const EditChargingLogicPage = () => {
         days: chargingLogicData.days,
         months: chargingLogicData.months,
         years: chargingLogicData.years.map((year) => parseInt(year, 10)),
+        location: formattedLocationData, 
       };
 
       console.log("Updating charging logic with data:", updatedChargingLogic);

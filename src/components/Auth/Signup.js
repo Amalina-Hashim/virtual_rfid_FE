@@ -1,22 +1,26 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Form, Button, Container, Row, Col } from "react-bootstrap";
-import { register, login } from "../../services/auth"; 
+import { register, login, getUser } from "../../services/api";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user"); 
+  const [role, setRole] = useState("user");
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
       await register({ username, email, password, role });
-      
-      await login({ username, password });
-      const userRole = localStorage.getItem("userRole");
+      const response = await login({ username, password });
+      localStorage.setItem("authToken", response.data.token);
+      const userResponse = await getUser();
+      const userRole = userResponse.data.role;
+
+      localStorage.setItem("userRole", userRole);
+
       if (userRole === "admin") {
         navigate("/admin/home");
       } else {
@@ -43,6 +47,7 @@ const Signup = () => {
                 placeholder="Enter username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
               />
             </Form.Group>
             <Form.Group
@@ -55,6 +60,7 @@ const Signup = () => {
                 placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
               />
             </Form.Group>
             <Form.Group
@@ -67,6 +73,7 @@ const Signup = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
               />
             </Form.Group>
             <Form.Group controlId="formBasicRole" style={{ textAlign: "left" }}>

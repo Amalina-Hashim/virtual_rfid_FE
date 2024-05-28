@@ -68,7 +68,7 @@ const AdminHomePage = () => {
 const handleDelete = async (id, locationId) => {
   try {
     await deleteChargingLogic(id);
-    await deleteLocation(locationId);
+    await deleteLocation(locationId.id); 
     setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
   } catch (error) {
     console.error("Failed to delete charging logic and location", error);

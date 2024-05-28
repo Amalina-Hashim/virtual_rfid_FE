@@ -1,14 +1,16 @@
-import React from "react";
 import { Outlet } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
-import Sidebar from "../components/Admin/Sidebar"; 
+import AdminSidebar from "../components/Admin/AdminSidebar";
+import UserSidebar from "../components/User/UserSidebar";
 
 const MainLayout = () => {
+  const userRole = localStorage.getItem("userRole");
+
   return (
-    <Container fluid stye={{ marginTop: "10px" }}>
+    <Container fluid style={{ marginTop: "10px" }}>
       <Row>
         <Col md={2}>
-          <Sidebar />
+          {userRole === "admin" ? <AdminSidebar /> : <UserSidebar />}
         </Col>
         <Col md={10}>
           <Outlet />

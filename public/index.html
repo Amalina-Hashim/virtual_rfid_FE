@@ -14,16 +14,26 @@
     function loadScript() {
       if (window.REACT_APP_GOOGLE_MAPS_API_KEY) {
         const scriptTag = document.createElement("script");
-        scriptTag.src = "https://maps.googleapis.com/maps/api/js?key=" + window.REACT_APP_GOOGLE_MAPS_API_KEY + "&libraries=places,drawing&v=weekly";
+        scriptTag.src = "https://maps.googleapis.com/maps/api/js?key=" + window.REACT_APP_GOOGLE_MAPS_API_KEY + "&libraries=geometry,places,drawing&v=weekly";
         scriptTag.defer = true;
         document.head.appendChild(scriptTag);
-        console.log("Google Maps API loaded with libraries: places, drawing");
+        console.log("Google Maps API loaded with libraries: geometry, places, drawing");
       }
+      const stripeScriptTag = document.createElement("script");
+      stripeScriptTag.src = "https://js.stripe.com/v3/";
+      stripeScriptTag.defer = true;
+      stripeScriptTag.onload = () => {
+        console.log("Stripe.js loaded");
+      };
+      stripeScriptTag.onerror = () => {
+        console.error("Failed to load Stripe.js");
+      };
+      document.head.appendChild(stripeScriptTag);
     }
     loadScript();
   </script>
   <meta http-equiv="Content-Security-Policy"
-    content="script-src 'self' https://maps.googleapis.com/ https://maps.gstatic.com/ 'unsafe-inline';">
+    content="script-src 'self' https://maps.googleapis.com/ https://maps.gstatic.com/ 'unsafe-inline' https://js.stripe.com;">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
