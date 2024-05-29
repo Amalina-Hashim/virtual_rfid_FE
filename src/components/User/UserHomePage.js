@@ -3,6 +3,9 @@ import { Container, Button } from "react-bootstrap";
 import { getUser, getBalance } from "../../services/api";
 import GeofenceMonitor from "../GeofenceMonitor";
 
+const POLLING_INTERVAL = 30000;
+const GEOLOCATION_TIMEOUT = 10000;
+
 const UserHomePage = () => {
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0);
@@ -14,7 +17,7 @@ const UserHomePage = () => {
       try {
         const response = await getUser();
         setUser(response.data);
-        checkGpsEnabled(); 
+        checkGpsEnabled();
       } catch (error) {
         console.error("Failed to fetch user", error);
       }
@@ -22,6 +25,23 @@ const UserHomePage = () => {
 
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    let balancePolling;
+
+    if (gpsEnabled) {
+      fetchBalance();
+      balancePolling = setInterval(() => {
+        fetchBalance();
+      }, POLLING_INTERVAL);
+    }
+
+    return () => {
+      if (balancePolling) {
+        clearInterval(balancePolling);
+      }
+    };
+  }, [gpsEnabled]);
 
   const checkGpsEnabled = () => {
     if ("geolocation" in navigator) {
@@ -31,7 +51,11 @@ const UserHomePage = () => {
           fetchBalance();
         },
         (error) => {
+          console.error("Error watching position:", error);
           setGpsEnabled(false);
+        },
+        {
+          timeout: GEOLOCATION_TIMEOUT,
         }
       );
     } else {

@@ -21,19 +21,26 @@ const GeofenceMonitor = ({ onGeofenceEnter }) => {
     }
   }, []);
 
-const checkGeofence = async (latitude, longitude) => {
-  try {
-    const response = await getChargingLogicByLocation({
-      latitude: parseFloat(latitude.toFixed(6)), 
-      longitude: parseFloat(longitude.toFixed(6)), 
-    });
-    if (response.data) {
-      onGeofenceEnter(response.data);
+  const checkGeofence = async (latitude, longitude) => {
+    try {
+      const lat = parseFloat(latitude.toFixed(6));
+      const lon = parseFloat(longitude.toFixed(6));
+      console.log("Checking geofence with latitude:", lat, "longitude:", lon);
+      const response = await getChargingLogicByLocation({
+        latitude: lat,
+        longitude: lon,
+      });
+      console.log("Geofence check response:", response.data); // Log the entire response data
+
+      if (response.data && typeof onGeofenceEnter === "function") {
+        onGeofenceEnter(response.data);
+      } else {
+        console.error("onGeofenceEnter is not a function");
+      }
+    } catch (error) {
+      console.error("Failed to check geofence:", error);
     }
-  } catch (error) {
-    console.error("Failed to check geofence:", error);
-  }
-};
+  };
 
   return null;
 };
