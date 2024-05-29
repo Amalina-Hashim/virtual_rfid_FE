@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { Button, Form, Container } from "react-bootstrap";
+import { Button, Form, Container, Row, Col } from "react-bootstrap";
 import {
   Elements,
-  CardElement,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { getBalance, createTransactionHistory } from "../../services/api";
+import { getBalance, makePayment } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 const TopUpForm = () => {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate(); 
   const [amount, setAmount] = useState("");
   const [balance, setBalance] = useState(0);
   const [message, setMessage] = useState("");
+  const [cardName, setCardName] = useState("");
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -31,8 +36,12 @@ const TopUpForm = () => {
     fetchBalance();
   }, []);
 
-  const handleChange = (e) => {
+  const handleAmountChange = (e) => {
     setAmount(e.target.value);
+  };
+
+  const handleCardNameChange = (e) => {
+    setCardName(e.target.value);
   };
 
   const handleSubmit = async (e) => {
@@ -41,28 +50,60 @@ const TopUpForm = () => {
       return;
     }
 
-    const cardElement = elements.getElement(CardElement);
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    const cardExpiryElement = elements.getElement(CardExpiryElement);
+    const cardCvcElement = elements.getElement(CardCvcElement);
 
     try {
       const { paymentMethod } = await stripe.createPaymentMethod({
         type: "card",
-        card: cardElement,
+        card: cardNumberElement,
+        billing_details: {
+          name: cardName,
+        },
       });
 
-      const paymentIntent = await createTransactionHistory({
-        amount: parseInt(amount),
-        paymentMethodId: paymentMethod.id,
+      const { id: paymentMethodId } = paymentMethod;
+
+      const paymentResponse = await makePayment({
+        amount: parseFloat(amount),
+        paymentMethodId,
       });
 
-      const confirmedPayment = await stripe.confirmCardPayment(
-        paymentIntent.client_secret
-      );
+      const { client_secret: clientSecret, status } = paymentResponse.data;
 
-      if (confirmedPayment.error) {
-        setMessage("Payment failed: " + confirmedPayment.error.message);
-      } else if (confirmedPayment.paymentIntent.status === "succeeded") {
+      if (status === "succeeded") {
         setMessage("Payment succeeded!");
-        setBalance((prevBalance) => prevBalance + parseInt(amount));
+        setBalance((prevBalance) => prevBalance + parseFloat(amount));
+        console.log("Navigating to /user/home...");
+        navigate("/user/home");
+      } else if (status === "requires_action") {
+        const confirmCardPayment = await stripe.confirmCardPayment(
+          clientSecret,
+          {
+            payment_method: {
+              card: cardNumberElement,
+              billing_details: {
+                name: cardName,
+              },
+            },
+          }
+        );
+
+        if (confirmCardPayment.error) {
+          setMessage("Payment failed: " + confirmCardPayment.error.message);
+        } else if (confirmCardPayment.paymentIntent.status === "succeeded") {
+          setMessage("Payment succeeded!");
+          setBalance((prevBalance) => prevBalance + parseFloat(amount));
+          console.log("Navigating to /user/home...");
+          navigate("/user/home");
+        } else {
+          setMessage(
+            "Payment status: " + confirmCardPayment.paymentIntent.status
+          );
+        }
+      } else {
+        setMessage("Payment status: " + status);
       }
     } catch (error) {
       console.error("Payment failed", error);
@@ -70,6 +111,7 @@ const TopUpForm = () => {
     }
   };
 
+    
   return (
     <Container>
       <h2>Top Up</h2>
@@ -77,9 +119,38 @@ const TopUpForm = () => {
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="formAmount">
           <Form.Label>Amount</Form.Label>
-          <Form.Control type="text" value={amount} onChange={handleChange} />
+          <Form.Control
+            type="text"
+            value={amount}
+            onChange={handleAmountChange}
+          />
         </Form.Group>
-        <CardElement />
+        <Form.Group controlId="formCardName">
+          <Form.Label>Cardholder Name</Form.Label>
+          <Form.Control
+            type="text"
+            value={cardName}
+            onChange={handleCardNameChange}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Card Number</Form.Label>
+          <CardNumberElement className="form-control" />
+        </Form.Group>
+        <Row>
+          <Col>
+            <Form.Group>
+              <Form.Label>Expiry Date</Form.Label>
+              <CardExpiryElement className="form-control" />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group>
+              <Form.Label>CVC</Form.Label>
+              <CardCvcElement className="form-control" />
+            </Form.Group>
+          </Col>
+        </Row>
         <Button variant="primary" type="submit" disabled={!stripe}>
           Top Up
         </Button>

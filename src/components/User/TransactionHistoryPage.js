@@ -4,6 +4,7 @@ import { getTransactionHistories } from "../../services/api";
 
 const UserTransactionHistoryPage = () => {
   const [transactions, setTransactions] = useState([]);
+  const [error, setError] = useState(null); 
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -12,6 +13,7 @@ const UserTransactionHistoryPage = () => {
         setTransactions(response.data);
       } catch (error) {
         console.error("Failed to fetch transactions", error);
+        setError("Failed to fetch transactions. Please try again later."); 
       }
     };
 
@@ -21,6 +23,7 @@ const UserTransactionHistoryPage = () => {
   return (
     <Container>
       <h2>Transaction History</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}{" "}
       <Table striped bordered hover>
         <thead>
           <tr>

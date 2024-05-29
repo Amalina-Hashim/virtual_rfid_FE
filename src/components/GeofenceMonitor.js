@@ -1,10 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { checkAndChargeUser, getLocationById } from "../services/api";
 
 const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
+  const watchId = useRef(null);
+
   useEffect(() => {
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
+      watchId.current = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           checkGeofenceAndCharge(latitude, longitude);
@@ -15,10 +17,17 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
         {
           enableHighAccuracy: true,
           maximumAge: 1000,
-          timeout: 5000,
+          timeout: 120000,
         }
       );
     }
+
+    return () => {
+      if (watchId.current) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+    };
   }, []);
 
   const checkGeofenceAndCharge = async (latitude, longitude) => {

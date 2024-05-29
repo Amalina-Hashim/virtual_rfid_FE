@@ -51,11 +51,11 @@ export const checkAndChargeUser = (coords) =>
   api.post("/check-and-charge/", coords);
 
 // Transaction History APIs
-export const getTransactionHistories = () => api.get("/transaction-histories/");
+export const getTransactionHistories = () => api.get("/transactions/");
 export const createTransactionHistory = (data) =>
-    api.post("/transaction-histories/", data);
-
-export const createTransaction = (data) =>
-  api.post("/create-transaction/", data);
+    api.post("/transactions/", data);
+  
+// Payment API
+export const makePayment = (data) => api.post("/make-payment/", data);
 
 export default api;

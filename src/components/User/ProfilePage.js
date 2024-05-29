@@ -28,7 +28,6 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add update user logic here
   };
 
   return (
