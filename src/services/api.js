@@ -45,11 +45,17 @@ export const disableChargingLogic = (id) =>
 
 // Get charging logic by location
 export const getChargingLogicByLocation = (coords) =>
-  api.post("/charging-logic/location/", coords);
+    api.post("/charging-logic/location/", coords);
+
+export const checkAndChargeUser = (coords) =>
+  api.post("/check-and-charge/", coords);
 
 // Transaction History APIs
 export const getTransactionHistories = () => api.get("/transaction-histories/");
 export const createTransactionHistory = (data) =>
-  api.post("/transaction-histories/", data);
+    api.post("/transaction-histories/", data);
+
+export const createTransaction = (data) =>
+  api.post("/create-transaction/", data);
 
 export default api;

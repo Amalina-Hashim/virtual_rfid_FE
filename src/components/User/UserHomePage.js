@@ -66,6 +66,7 @@ const UserHomePage = () => {
   const fetchBalance = async () => {
     try {
       const response = await getBalance();
+      console.log("Fetched balance:", response.data.balance);
       setBalance(response.data.balance);
     } catch (error) {
       console.error("Failed to fetch balance", error);
@@ -74,6 +75,10 @@ const UserHomePage = () => {
 
   const handleGeofenceEnter = (locationInfo) => {
     setLocationInfo(locationInfo);
+  };
+
+  const handleBalanceUpdate = (newBalance) => {
+    setBalance(newBalance);
   };
 
   return (
@@ -99,7 +104,10 @@ const UserHomePage = () => {
               <p>Charge rate: {locationInfo.amount_rate}</p>
             </div>
           )}
-          <GeofenceMonitor onGeofenceEnter={handleGeofenceEnter} />
+          <GeofenceMonitor
+            onGeofenceEnter={handleGeofenceEnter}
+            onBalanceUpdate={handleBalanceUpdate}
+          />
         </div>
       )}
     </Container>

@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
-import { getChargingLogicByLocation } from "../services/api";
+import { checkAndChargeUser, getLocationById } from "../services/api";
 
-const GeofenceMonitor = ({ onGeofenceEnter }) => {
+const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          checkGeofence(latitude, longitude);
+          checkGeofenceAndCharge(latitude, longitude);
         },
         (error) => {
           console.error("Error watching position:", error);
@@ -21,24 +21,55 @@ const GeofenceMonitor = ({ onGeofenceEnter }) => {
     }
   }, []);
 
-  const checkGeofence = async (latitude, longitude) => {
+  const checkGeofenceAndCharge = async (latitude, longitude) => {
     try {
       const lat = parseFloat(latitude.toFixed(6));
       const lon = parseFloat(longitude.toFixed(6));
       console.log("Checking geofence with latitude:", lat, "longitude:", lon);
-      const response = await getChargingLogicByLocation({
+
+      const response = await checkAndChargeUser({
         latitude: lat,
         longitude: lon,
       });
-      console.log("Geofence check response:", response.data); // Log the entire response data
 
-      if (response.data && typeof onGeofenceEnter === "function") {
-        onGeofenceEnter(response.data);
-      } else {
-        console.error("onGeofenceEnter is not a function");
+      console.log("Geofence check response:", response.data);
+
+      if (response.data.transaction) {
+        if (
+          response.data.location &&
+          typeof response.data.location.id === "number" &&
+          typeof onGeofenceEnter === "function"
+        ) {
+          const locationId = response.data.location.id; // Extracting location ID
+          const locationResponse = await getLocationById(locationId);
+
+          if (locationResponse.data) {
+            const locationInfo = {
+              location_name: locationResponse.data.location_name || "Unknown",
+              amount_to_charge: response.data.transaction.amount || "0.00",
+              amount_rate: response.data.transaction.amount_rate || "N/A",
+              ...response.data,
+            };
+
+            onGeofenceEnter(locationInfo);
+          } else {
+            console.error("Location data not found");
+          }
+        } else {
+          console.error(
+            "Invalid location ID or onGeofenceEnter is not a function"
+          );
+        }
+      }
+
+      if (
+        response.data.balance !== undefined &&
+        typeof onBalanceUpdate === "function"
+      ) {
+        onBalanceUpdate(response.data.balance);
       }
     } catch (error) {
-      console.error("Failed to check geofence:", error);
+      console.error("Failed to check geofence and charge user:", error);
     }
   };
 
