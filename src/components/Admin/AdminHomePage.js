@@ -128,6 +128,7 @@ const handleDelete = async (id, locationId) => {
                 </Button>{" "}
                 <Button
                   variant="secondary"
+                  style={{ marginTop: "8px" }}
                   onClick={() => handleDisable(logic.id)}
                   disabled={!logic.enabled}
                 >

@@ -74,9 +74,10 @@ const TopUpForm = () => {
 
       if (status === "succeeded") {
         setMessage("Payment succeeded!");
-        setBalance((prevBalance) => prevBalance + parseFloat(amount));
+        const newBalance = balance + parseFloat(amount);
+        setBalance(newBalance);
         console.log("Navigating to /user/home...");
-        navigate("/user/home");
+        navigate("/user/home", { state: { newBalance } }); 
       } else if (status === "requires_action") {
         const confirmCardPayment = await stripe.confirmCardPayment(
           clientSecret,
@@ -94,9 +95,10 @@ const TopUpForm = () => {
           setMessage("Payment failed: " + confirmCardPayment.error.message);
         } else if (confirmCardPayment.paymentIntent.status === "succeeded") {
           setMessage("Payment succeeded!");
-          setBalance((prevBalance) => prevBalance + parseFloat(amount));
+          const newBalance = balance + parseFloat(amount);
+          setBalance(newBalance);
           console.log("Navigating to /user/home...");
-          navigate("/user/home");
+          navigate("/user/home", { state: { newBalance } }); 
         } else {
           setMessage(
             "Payment status: " + confirmCardPayment.paymentIntent.status
@@ -110,8 +112,7 @@ const TopUpForm = () => {
       setMessage("Payment failed: " + error.message);
     }
   };
-
-    
+ 
   return (
     <Container>
       <h2>Top Up</h2>

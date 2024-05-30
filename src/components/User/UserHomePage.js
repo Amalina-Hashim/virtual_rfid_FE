@@ -1,29 +1,31 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Container, Button, Spinner } from "react-bootstrap";
 import { getUser, getBalance } from "../../services/api";
 import GeofenceMonitor from "../GeofenceMonitor";
+import LoginContext from "../../LoginContext";
+import { useLocation } from "react-router-dom";
 
 const POLLING_INTERVAL = 30000;
 const GEOLOCATION_TIMEOUT = 30000;
 
-const UserHomePage = ({ isLoggedOut }) => {
+const UserHomePage = ({ onLogout }) => {
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0);
   const [locationInfo, setLocationInfo] = useState(null);
   const [gpsEnabled, setGpsEnabled] = useState(false);
-  const [checkingGps, setCheckingGps] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [retryGps, setRetryGps] = useState(false);
 
   const watchId = useRef(null);
+  const location = useLocation();
+  const { isLoggedIn, setIsLoggedIn } = useContext(LoginContext);
 
   useEffect(() => {
-    if (isLoggedOut) {
+    if (!isLoggedIn) {
       setUser(null);
       setBalance(0);
       setLocationInfo(null);
       setGpsEnabled(false);
-      setCheckingGps(false);
       setFetchError(null);
       setRetryGps(false);
       if (watchId.current) {
@@ -31,7 +33,7 @@ const UserHomePage = ({ isLoggedOut }) => {
         watchId.current = null;
       }
     }
-  }, [isLoggedOut]);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -39,24 +41,26 @@ const UserHomePage = ({ isLoggedOut }) => {
         const response = await getUser();
         console.log("Fetched user:", response.data);
         setUser(response.data);
-        checkGpsEnabled();
+        if (isLoggedIn) {
+          checkGpsEnabled();
+        } else {
+          fetchBalance();
+        }
       } catch (error) {
         console.error("Failed to fetch user", error);
-        setCheckingGps(false);
         setFetchError("Failed to fetch user data.");
       }
     };
 
-    if (!isLoggedOut) {
+    if (!isLoggedIn) {
       fetchUser();
     }
-  }, [isLoggedOut]);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     let balancePolling;
 
-    if (gpsEnabled) {
-      fetchBalance();
+    if (gpsEnabled || !isLoggedIn) {
       balancePolling = setInterval(() => {
         fetchBalance();
       }, POLLING_INTERVAL);
@@ -67,7 +71,7 @@ const UserHomePage = ({ isLoggedOut }) => {
         clearInterval(balancePolling);
       }
     };
-  }, [gpsEnabled]);
+  }, [gpsEnabled, isLoggedIn]);
 
   useEffect(() => {
     if (retryGps) {
@@ -77,7 +81,6 @@ const UserHomePage = ({ isLoggedOut }) => {
 
   const checkGpsEnabled = async () => {
     console.log("Checking GPS status...");
-    setCheckingGps(true);
 
     try {
       const permissionStatus = await navigator.permissions.query({
@@ -93,12 +96,10 @@ const UserHomePage = ({ isLoggedOut }) => {
       } else {
         console.log("GPS permission denied");
         setGpsEnabled(false);
-        setCheckingGps(false);
       }
     } catch (error) {
       console.error("Failed to check GPS permission", error);
       setGpsEnabled(false);
-      setCheckingGps(false);
     }
 
     setRetryGps(false);
@@ -110,13 +111,11 @@ const UserHomePage = ({ isLoggedOut }) => {
         (position) => {
           console.log("GPS enabled:", position);
           setGpsEnabled(true);
-          setCheckingGps(false);
           fetchBalance();
         },
         (error) => {
           console.error("Error watching position:", error);
           setGpsEnabled(false);
-          setCheckingGps(false);
           if (error.code === error.TIMEOUT) {
             console.error("Geolocation timeout expired");
           }
@@ -129,7 +128,6 @@ const UserHomePage = ({ isLoggedOut }) => {
     } else {
       console.log("Geolocation not available in navigator");
       setGpsEnabled(false);
-      setCheckingGps(false);
     }
   };
 
@@ -160,23 +158,16 @@ const UserHomePage = ({ isLoggedOut }) => {
   return (
     <Container>
       <h1>Hello, {user ? user.username : "User"}</h1>
-      {checkingGps ? (
+      {isLoggedIn && !gpsEnabled && (
         <div>
           <p>Checking GPS status...</p>
           <Spinner animation="border" role="status">
             <span className="visually-hidden">Loading...</span>
           </Spinner>
         </div>
-      ) : !gpsEnabled ? (
-        <div>
-          <p>Please enable GPS to use our service.</p>
-          <Button onClick={handleRetryGps}>Retry GPS Check</Button>
-          {!gpsEnabled && (
-            <p>
-              GPS is not enabled. Please enable GPS in your device settings.
-            </p>
-          )}
-        </div>
+      )}
+      {fetchError ? (
+        <p style={{ color: "red" }}>{fetchError}</p>
       ) : (
         <div>
           <p>Your current balance is: ${balance}</p>
@@ -184,7 +175,7 @@ const UserHomePage = ({ isLoggedOut }) => {
             <div>
               <p>You are within the zone: {locationInfo.location_name}</p>
               <p>Charge amount: ${locationInfo.amount_to_charge}</p>
-              <p>Charge rate: {locationInfo.amount_rate}</p>
+              <p>Charge rate: Per {locationInfo.amount_rate}</p>
             </div>
           )}
           <GeofenceMonitor
@@ -193,7 +184,6 @@ const UserHomePage = ({ isLoggedOut }) => {
           />
         </div>
       )}
-      {fetchError && <p style={{ color: "red" }}>{fetchError}</p>}
     </Container>
   );
 };
