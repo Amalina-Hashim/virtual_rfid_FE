@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button, Form, Container } from "react-bootstrap";
-import { getUser } from "../../services/auth";
+import { getUser, updateUserProfile } from "../../services/api";
 
 const ProfilePage = () => {
   const [user, setUser] = useState({ username: "", email: "" });
+  const [password, setPassword] = useState("");
+  const [isUpdated, setIsUpdated] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -26,13 +28,34 @@ const ProfilePage = () => {
     }));
   };
 
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    try {
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        throw new Error("No authentication token found");
+      }
+
+      const data = await updateUserProfile(authToken, user, password);
+      setUser({ username: data.username, email: data.email });
+      setPassword("");
+      setIsUpdated(true);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   return (
     <Container>
       <h2>Profile</h2>
+      {isUpdated && (
+        <div className="alert alert-success">Profile updated successfully!</div>
+      )}
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="formUsername">
           <Form.Label>Username</Form.Label>
@@ -51,6 +74,15 @@ const ProfilePage = () => {
             name="email"
             value={user.email}
             onChange={handleChange}
+          />
+        </Form.Group>
+        <Form.Group controlId="formPassword">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            name="password"
+            value={password}
+            onChange={handlePasswordChange}
           />
         </Form.Group>
         <Button variant="primary" type="submit">

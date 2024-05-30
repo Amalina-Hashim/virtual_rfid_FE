@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Form, Button, Container, Row, Col } from "react-bootstrap";
+import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
 import { register, login, getUser } from "../../services/api";
 
 const Signup = () => {
@@ -8,10 +8,15 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    if (!validateEmail(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
     try {
       await register({ username, email, password, role });
       const response = await login({ username, password });
@@ -27,8 +32,14 @@ const Signup = () => {
         navigate("/user/home");
       }
     } catch (error) {
+      setErrorMessage("Signup failed. Please try again.");
       console.error("Signup failed", error);
     }
+  };
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
   };
 
   return (
@@ -36,6 +47,7 @@ const Signup = () => {
       <Row className="justify-content-md-center">
         <Col md={6}>
           <h2>Signup</h2>
+          {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
           <Form onSubmit={handleSignup}>
             <Form.Group
               controlId="formBasicUsername"

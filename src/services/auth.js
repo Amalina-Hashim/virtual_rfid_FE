@@ -21,7 +21,6 @@ export const login = async (data) => {
   const response = await api.post("/token/", data);
   if (response.data) {
     localStorage.setItem("authToken", response.data.token);
-    // Fetch user role
     const userResponse = await api.get("/users/", {
       headers: { Authorization: `Token ${response.data.token}` },
     });

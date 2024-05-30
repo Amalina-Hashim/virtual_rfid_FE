@@ -21,6 +21,30 @@ export const getUser = () => api.get("/current-user/");
 export const register = (data) => api.post("/register/", data);
 export const login = (data) => api.post("/token/", data);
 
+// User Profile Update API
+export const updateUserProfile = async (authToken, user, password) => {
+  try {
+    const response = await api.put(
+      "/profile/update/",
+      {
+        username: user.username,
+        email: user.email,
+        password: password,
+      },
+      {
+        headers: {
+          Authorization: `Token ${authToken}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw new Error("Failed to update profile");
+  }
+};
+
 // Balance API
 export const getBalance = () => api.get("/balance/");
 
@@ -45,7 +69,7 @@ export const disableChargingLogic = (id) =>
 
 // Get charging logic by location
 export const getChargingLogicByLocation = (coords) =>
-    api.post("/charging-logic/location/", coords);
+  api.post("/charging-logic/location/", coords);
 
 export const checkAndChargeUser = (coords) =>
   api.post("/check-and-charge/", coords);
@@ -53,9 +77,10 @@ export const checkAndChargeUser = (coords) =>
 // Transaction History APIs
 export const getTransactionHistories = () => api.get("/transactions/");
 export const createTransactionHistory = (data) =>
-    api.post("/transactions/", data);
-  
+  api.post("/transactions/", data);
+
 // Payment API
 export const makePayment = (data) => api.post("/make-payment/", data);
+
 
 export default api;

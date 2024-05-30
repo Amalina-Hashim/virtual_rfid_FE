@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Form, Button, Container, Row, Col } from "react-bootstrap";
+import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
 import { login, getUser } from "../../services/api";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -25,6 +26,7 @@ const Login = () => {
         navigate("/user/home");
       }
     } catch (error) {
+      setErrorMessage("Login failed. Please check your username and password.");
       console.error("Login failed", error);
     }
   };
@@ -34,6 +36,7 @@ const Login = () => {
       <Row className="justify-content-md-center">
         <Col md={6}>
           <h2>Login</h2>
+          {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
           <Form onSubmit={handleLogin}>
             <Form.Group
               controlId="formBasicEmail"
