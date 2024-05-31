@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
 import { register, login, getUser } from "../../services/api";
+import LoginContext from "../../LoginContext";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
@@ -10,6 +11,7 @@ const Signup = () => {
   const [role, setRole] = useState("user");
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useContext(LoginContext);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -25,6 +27,7 @@ const Signup = () => {
       const userRole = userResponse.data.role;
 
       localStorage.setItem("userRole", userRole);
+      setIsLoggedIn(true);
 
       if (userRole === "admin") {
         navigate("/admin/home");
@@ -98,7 +101,11 @@ const Signup = () => {
                 <option value="admin">Admin</option>
               </Form.Select>
             </Form.Group>
-            <Button variant="primary" type="submit">
+            <Button
+              variant="primary"
+              style={{ marginTop: "15px" }}
+              type="submit"
+            >
               Signup
             </Button>
           </Form>

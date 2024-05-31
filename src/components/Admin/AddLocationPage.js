@@ -176,7 +176,7 @@ const AddLocationPage = () => {
       polygon_points: coordinates,
       radius: null,
     }));
-    setPolygon(polygon); // Persist polygon
+    setPolygon(polygon); 
     setDrawingMode(null);
   };
 
@@ -193,7 +193,7 @@ const AddLocationPage = () => {
       radius: radius,
       polygon_points: [],
     }));
-    setCircle(circle); // Persist circle
+    setCircle(circle); 
     setDrawingMode(null);
   };
 
@@ -253,7 +253,7 @@ const AddLocationPage = () => {
 
       const chargingLogicPayload = {
         ...chargingLogicData,
-        location: locationResponse.data, // Pass the full location object
+        location: locationResponse.data, 
         amount_rate: amountRate,
         days: chargingLogicData.days
           ? chargingLogicData.days.map((day) => day.toString())

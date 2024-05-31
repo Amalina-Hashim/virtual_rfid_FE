@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", // Change this to actual backend URL later!
+  baseURL: "http://localhost:8000/api", // Ensure this points to your backend
   headers: {
     "Content-Type": "application/json",
   },
@@ -66,13 +66,32 @@ export const deleteChargingLogic = (id) =>
   api.delete(`/charging-logics/${id}/`);
 export const disableChargingLogic = (id) =>
   api.patch(`/charging-logics/${id}/disable/`);
+export const enableChargingLogic = (id) =>
+  api.patch(`/charging-logics/${id}/enable/`);
+
+export const getChargingLogicStatus = async () => {
+  try {
+    const response = await api.get("/charging-logic/status/");
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch charging logic status", error);
+    throw error;
+  }
+};
 
 // Get charging logic by location
 export const getChargingLogicByLocation = (coords) =>
   api.post("/charging-logic/location/", coords);
 
-export const checkAndChargeUser = (coords) =>
-  api.post("/check-and-charge/", coords);
+export const checkAndChargeUser = async (data) => {
+  try {
+    const response = await api.post("/check-and-charge/", data);
+    return response;
+  } catch (error) {
+    console.error("API call to check and charge user failed:", error);
+    throw error;
+  }
+};
 
 // Transaction History APIs
 export const getTransactionHistories = () => api.get("/transactions/");
@@ -81,6 +100,5 @@ export const createTransactionHistory = (data) =>
 
 // Payment API
 export const makePayment = (data) => api.post("/make-payment/", data);
-
 
 export default api;

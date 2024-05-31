@@ -17,7 +17,7 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
         {
           enableHighAccuracy: true,
           maximumAge: 1000,
-          timeout: 120000,
+          timeout: 60000,
         }
       );
     }
@@ -49,7 +49,7 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
           typeof response.data.location.id === "number" &&
           typeof onGeofenceEnter === "function"
         ) {
-          const locationId = response.data.location.id; // Extracting location ID
+          const locationId = response.data.location.id; 
           const locationResponse = await getLocationById(locationId);
 
           if (locationResponse.data) {

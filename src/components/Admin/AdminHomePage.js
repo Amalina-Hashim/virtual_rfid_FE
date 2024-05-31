@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import {
   getChargingLogics,
   deleteChargingLogic,
-    disableChargingLogic,
+  disableChargingLogic,
+  enableChargingLogic,
   deleteLocation,
 } from "../../services/api";
 
@@ -15,8 +16,6 @@ const AdminHomePage = () => {
   const fetchChargingLogics = async () => {
     try {
       const response = await getChargingLogics();
-      console.log("Charging logics raw response data:", response.data);
-
       const formattedData = response.data.map((logic) => {
         const days = Array.isArray(logic.days)
           ? logic.days.map((day) =>
@@ -51,10 +50,10 @@ const AdminHomePage = () => {
           months,
           years,
           location_name: logic.location_name,
+          enabled: logic.is_enabled, // Ensure the enabled state is correctly set
         };
       });
 
-      console.log("Formatted charging logics data:", formattedData);
       setChargingLogics(formattedData);
     } catch (error) {
       console.error("Failed to fetch charging logics", error);
@@ -65,15 +64,15 @@ const AdminHomePage = () => {
     fetchChargingLogics();
   }, []);
 
-const handleDelete = async (id, locationId) => {
-  try {
-    await deleteChargingLogic(id);
-    await deleteLocation(locationId.id); 
-    setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
-  } catch (error) {
-    console.error("Failed to delete charging logic and location", error);
-  }
-};
+  const handleDelete = async (id, locationId) => {
+    try {
+      await deleteChargingLogic(id);
+      await deleteLocation(locationId.id);
+      setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
+    } catch (error) {
+      console.error("Failed to delete charging logic and location", error);
+    }
+  };
 
   const handleDisable = async (id) => {
     try {
@@ -88,9 +87,22 @@ const handleDelete = async (id, locationId) => {
     }
   };
 
+  const handleEnable = async (id) => {
+    try {
+      await enableChargingLogic(id);
+      setChargingLogics(
+        chargingLogics.map((logic) =>
+          logic.id === id ? { ...logic, enabled: true } : logic
+        )
+      );
+    } catch (error) {
+      console.error("Failed to enable charging logic", error);
+    }
+  };
+
   const handleEdit = async (id) => {
     navigate(`/admin/edit-charging-logic/${id}`);
-    await fetchChargingLogics(); 
+    await fetchChargingLogics();
   };
 
   return (
@@ -111,7 +123,10 @@ const handleDelete = async (id, locationId) => {
         </thead>
         <tbody>
           {chargingLogics.map((logic) => (
-            <tr key={logic.id}>
+            <tr
+              key={logic.id}
+              style={{ color: logic.enabled ? "black" : "grey" }}
+            >
               <td>{logic.location_name || "N/A"}</td>
               <td>${logic.amount_to_charge}</td>
               <td>{logic.start_time}</td>
@@ -123,16 +138,23 @@ const handleDelete = async (id, locationId) => {
               </td>
               <td>{logic.amount_rate}</td>
               <td>
-                <Button variant="primary" onClick={() => handleEdit(logic.id)}>
+                <Button
+                  variant="primary"
+                          style={{ marginTop: "8px" }}
+                          onClick={() => handleEdit(logic.id)}
+                >
                   Edit
                 </Button>{" "}
                 <Button
-                  variant="secondary"
+                  variant={logic.enabled ? "secondary" : "success"}
                   style={{ marginTop: "8px" }}
-                  onClick={() => handleDisable(logic.id)}
-                  disabled={!logic.enabled}
+                  onClick={() =>
+                    logic.enabled
+                      ? handleDisable(logic.id)
+                      : handleEnable(logic.id)
+                  }
                 >
-                  {logic.enabled ? "Disable" : "Disabled"}
+                  {logic.enabled ? "Disable" : "Enable"}
                 </Button>{" "}
                 <Button
                   variant="danger"
