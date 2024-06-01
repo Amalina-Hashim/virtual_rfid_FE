@@ -38,7 +38,7 @@ const Login = () => {
     <Container>
       <Row className="justify-content-md-center">
         <Col md={6}>
-          <h2>Login</h2>
+          <h2>Login to Geopayment</h2>
           {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
           <Form onSubmit={handleLogin}>
             <Form.Group

@@ -49,7 +49,7 @@ const Signup = () => {
     <Container>
       <Row className="justify-content-md-center">
         <Col md={6}>
-          <h2>Signup</h2>
+          <h2>Signup to Geopayment</h2>
           {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
           <Form onSubmit={handleSignup}>
             <Form.Group

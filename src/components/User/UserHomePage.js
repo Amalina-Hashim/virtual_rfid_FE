@@ -8,6 +8,7 @@ import {
 } from "../../services/api";
 import GeofenceMonitor from "../GeofenceMonitor";
 import LoginContext from "../../LoginContext";
+import Card from "react-bootstrap/Card";
 
 
 const POLLING_INTERVAL = 10000;
@@ -225,10 +226,10 @@ const UserHomePage = ({ onLogout }) => {
   };
 
   return (
-    <Container>
-      <h1>Hello, {user ? user.username : "User"}</h1>
+    <Container className="d-flex flex-column align-items-center">
+      <h1 className="text-center">Hello, {user ? user.username : "User"}</h1>
       {isLoggedIn && checkingGps && !gpsChecked && (
-        <div>
+        <div className="text-center">
           <p>Checking GPS status...</p>
           <Spinner animation="border" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -238,15 +239,54 @@ const UserHomePage = ({ onLogout }) => {
       {fetchError ? (
         <p style={{ color: "red" }}>{fetchError}</p>
       ) : (
-        <div>
-          <p>Your current balance is: ${balance}</p>
+        <div className="text-center">
+          <Card
+            className="mx-auto mt-3"
+            style={{
+              width: "500px",
+              backgroundColor: "#555555",
+            }}
+          >
+            <Card.Body>
+              <p style={{ fontSize: "25px" }}>
+                Your current balance is:{" "}
+                <span style={{ fontWeight: "bold" }}>${balance}</span>
+              </p>
+            </Card.Body>
+          </Card>
           {applicableChargingLogic && (
             <div>
-              <p>
-                You are within the zone: {applicableChargingLogic.location_name}
-              </p>
-              <p>Charge amount: ${applicableChargingLogic.amount}</p>
-              <p>Charge rate: Per {applicableChargingLogic.amount_rate}</p>
+              <Card
+                className="mx-auto mt-3"
+                style={{
+                  width: "500px",
+                  backgroundColor: "#3a3a3a",
+                  color: "white",
+                  fontSize: "20px",
+                }}
+              >
+                <Card.Body>
+                  <p>
+                    You are within the zone:{" "}
+                    <span style={{ fontWeight: "bold" }}>
+                      {" "}
+                      {applicableChargingLogic.location_name}{" "}
+                    </span>
+                  </p>
+                  <p>
+                    Charge amount:{" "}
+                    <span style={{ fontWeight: "bold" }}>
+                      ${applicableChargingLogic.amount}
+                    </span>
+                  </p>
+                  <p>
+                    Charge rate:{" "}
+                    <span style={{ fontWeight: "bold" }}>
+                      Per {applicableChargingLogic.amount_rate}
+                    </span>
+                  </p>
+                </Card.Body>
+              </Card>
             </div>
           )}
           <GeofenceMonitor onGeofenceEnter={handleGeofenceEnter} />

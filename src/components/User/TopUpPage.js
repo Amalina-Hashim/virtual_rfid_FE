@@ -112,6 +112,10 @@ const TopUpForm = () => {
       setMessage("Payment failed: " + error.message);
     }
   };
+    
+      const handleCancel = () => {
+        navigate("/user/home");
+      };
  
   return (
     <Container>
@@ -152,8 +156,20 @@ const TopUpForm = () => {
             </Form.Group>
           </Col>
         </Row>
-        <Button variant="primary" type="submit" disabled={!stripe}>
+        <Button
+          variant="primary"
+          style={{ marginTop: "15px", marginBottom: "15px", marginRight: "10px" }}
+          type="submit"
+          disabled={!stripe}
+        >
           Top Up
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={handleCancel}
+          style={{ marginTop: "15px", marginBottom: "15px" }}
+        >
+          Cancel
         </Button>
       </Form>
       {message && <p>{message}</p>}

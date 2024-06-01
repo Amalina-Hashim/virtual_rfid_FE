@@ -20,44 +20,50 @@ const UserSidebar = () => {
 
   return (
     <>
-      <Button class="menu" variant="dark" onClick={handleShow}>
-        <FaBars size={20} />
-      </Button>
+      <div className="menu-button-container">
+        <Button class="menu" variant="dark" onClick={handleShow}>
+          <FaBars size={20} />
+        </Button>
 
-      <Offcanvas show={show} onHide={handleClose}>
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Geopayment</Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          <Nav className="flex-column custom-sidebar">
-            <NavLink to="/user/home" className="nav-link" onClick={handleClose}>
-              Home
-            </NavLink>
-            <NavLink
-              to="/user/profile"
-              className="nav-link"
-              onClick={handleClose}
-            >
-              Profile
-            </NavLink>
-            <NavLink
-              to="/user/top-up"
-              className="nav-link"
-              onClick={handleClose}
-            >
-              Top Up
-            </NavLink>
-            <NavLink
-              to="/user/transactions"
-              className="nav-link"
-              onClick={handleClose}
-            >
-              Transactions
-            </NavLink>
-            <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
-          </Nav>
-        </Offcanvas.Body>
-      </Offcanvas>
+        <Offcanvas show={show} onHide={handleClose}>
+          <Offcanvas.Header closeButton>
+            <Offcanvas.Title>Geopayment</Offcanvas.Title>
+          </Offcanvas.Header>
+          <Offcanvas.Body>
+            <Nav className="flex-column custom-sidebar">
+              <NavLink
+                to="/user/home"
+                className="nav-link"
+                onClick={handleClose}
+              >
+                Home
+              </NavLink>
+              <NavLink
+                to="/user/profile"
+                className="nav-link"
+                onClick={handleClose}
+              >
+                Profile
+              </NavLink>
+              <NavLink
+                to="/user/top-up"
+                className="nav-link"
+                onClick={handleClose}
+              >
+                Top Up
+              </NavLink>
+              <NavLink
+                to="/user/transactions"
+                className="nav-link"
+                onClick={handleClose}
+              >
+                Transactions
+              </NavLink>
+              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+            </Nav>
+          </Offcanvas.Body>
+        </Offcanvas>
+      </div>
     </>
   );
 };

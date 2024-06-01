@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Button, Form, Container } from "react-bootstrap";
 import { getUser, updateUserProfile } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 const ProfilePage = () => {
   const [user, setUser] = useState({ username: "", email: "" });
   const [password, setPassword] = useState("");
   const [isUpdated, setIsUpdated] = useState(false);
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -50,6 +52,10 @@ const ProfilePage = () => {
     }
   };
 
+      const handleCancel = () => {
+        navigate("/user/home");
+      };
+
   return (
     <Container>
       <h2>Profile</h2>
@@ -85,8 +91,23 @@ const ProfilePage = () => {
             onChange={handlePasswordChange}
           />
         </Form.Group>
-        <Button variant="primary" type="submit">
+        <Button
+          variant="primary"
+          style={{
+            marginTop: "15px",
+            marginBottom: "15px",
+            marginRight: "10px",
+          }}
+          type="submit"
+        >
           Update
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={handleCancel}
+          style={{ marginTop: "15px", marginBottom: "15px" }}
+        >
+          Cancel
         </Button>
       </Form>
     </Container>
