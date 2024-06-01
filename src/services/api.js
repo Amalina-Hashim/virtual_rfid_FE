@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", // Ensure this points to your backend
+  baseURL: "http://localhost:8000/api", // Update with deployed url
   headers: {
     "Content-Type": "application/json",
   },
@@ -85,7 +85,9 @@ export const getChargingLogicByLocation = (coords) =>
 
 export const checkAndChargeUser = async (data) => {
   try {
+    console.log("Sending request payload:", data);
     const response = await api.post("/check-and-charge/", data);
+    console.log("Response received:", response.data);
     return response;
   } catch (error) {
     console.error("API call to check and charge user failed:", error);

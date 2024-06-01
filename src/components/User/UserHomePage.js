@@ -8,7 +8,7 @@ import {
 } from "../../services/api";
 import GeofenceMonitor from "../GeofenceMonitor";
 import LoginContext from "../../LoginContext";
-import { useLocation } from "react-router-dom";
+
 
 const POLLING_INTERVAL = 10000;
 const GEOLOCATION_TIMEOUT = 20000;
@@ -126,7 +126,7 @@ const UserHomePage = ({ onLogout }) => {
       setGpsEnabled(false);
       setCheckingGps(false);
     }
-    setGpsChecked(true); 
+    setGpsChecked(true);
   };
 
   const getGpsLocation = () => {
@@ -172,23 +172,49 @@ const UserHomePage = ({ onLogout }) => {
 
   const checkAndChargeUser = async (latitude, longitude) => {
     if (latitude === undefined || longitude === undefined) {
+      console.error("Latitude or longitude is undefined.");
       return;
     }
+
+    const currentTime = new Date().toISOString(); 
+
+    const payload = {
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      timestamp: currentTime,
+    };
+
+    if (isNaN(payload.latitude) || isNaN(payload.longitude)) {
+      console.error("Latitude or longitude is not a valid number.");
+      return;
+    }
+
+    console.log("Sending request payload:", payload);
+
     try {
-      const response = await apiCheckAndChargeUser({ latitude, longitude });
+      const response = await apiCheckAndChargeUser(payload);
+      console.log("Response received:", response.data);
+
       if (response.data.transaction) {
         setApplicableChargingLogic({
           amount: response.data.transaction.amount,
           amount_rate: response.data.transaction.amount_rate,
           location_name: response.data.location.location_name,
         });
-        fetchBalance();
+        fetchBalance(); 
       } else {
         setApplicableChargingLogic(null);
       }
     } catch (error) {
       setFetchError("Failed to check and charge user.");
       setApplicableChargingLogic(null);
+      console.error("API call to check and charge user failed:", error);
+
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        console.error("Error response headers:", error.response.headers);
+      }
     }
   };
 

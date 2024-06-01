@@ -50,7 +50,7 @@ const AdminHomePage = () => {
           months,
           years,
           location_name: logic.location_name,
-          enabled: logic.is_enabled, // Ensure the enabled state is correctly set
+          enabled: logic.is_enabled, 
         };
       });
 

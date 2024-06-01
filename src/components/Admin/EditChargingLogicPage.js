@@ -10,7 +10,7 @@ import {
 } from "../../services/api";
 import { useGoogleMaps } from "../../GoogleMapsProvider";
 
-const mapContainerStyle = { height: "400px", width: "100%" };
+
 const defaultCenter = { lat: 37.7749, lng: -122.4194 };
 
 const EditChargingLogicPage = () => {
@@ -50,7 +50,7 @@ const EditChargingLogicPage = () => {
       try {
         const chargingLogicResponse = await getChargingLogicById(id);
         const chargingLogic = chargingLogicResponse.data;
-        const locationId = chargingLogic.location.id; 
+        const locationId = chargingLogic.location.id;
 
         const locationResponse = await getLocationById(locationId);
         const locationData = locationResponse.data;
@@ -61,6 +61,7 @@ const EditChargingLogicPage = () => {
           longitude: parseFloat(locationData.longitude),
           radius:
             locationData.radius !== "" ? parseFloat(locationData.radius) : null,
+          polygon_points: locationData.polygon_points || [],
         });
 
         setChargingLogicData({
@@ -82,6 +83,7 @@ const EditChargingLogicPage = () => {
         longitude: parseFloat(locationData.longitude),
         radius:
           locationData.radius !== "" ? parseFloat(locationData.radius) : null,
+        polygon_points: locationData.polygon_points || [],
       });
       setChargingLogicData({
         ...chargingLogicData,
@@ -93,7 +95,6 @@ const EditChargingLogicPage = () => {
       fetchLocationAndChargingLogic();
     }
   }, [id, location.state]);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -120,7 +121,7 @@ const EditChargingLogicPage = () => {
         days: chargingLogicData.days,
         months: chargingLogicData.months,
         years: chargingLogicData.years.map((year) => parseInt(year, 10)),
-        location: formattedLocationData, 
+        location: formattedLocationData,
       };
 
       console.log("Updating charging logic with data:", updatedChargingLogic);
@@ -195,6 +196,10 @@ const EditChargingLogicPage = () => {
       setCircle(null);
     }
     setDrawingMode(null);
+  };
+
+  const handleCancel = () => {
+    navigate(-1); 
   };
 
   return (
@@ -326,6 +331,19 @@ const EditChargingLogicPage = () => {
             }
           />
         </Form.Group>
+        <Form.Group controlId="formPolygonPoints" style={{ marginTop: "10px" }}>
+          <Form.Label>Polygon Points</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={5}
+            value={
+              locationData.polygon_points.length
+                ? JSON.stringify(locationData.polygon_points, null, 2)
+                : ""
+            }
+            readOnly
+          />
+        </Form.Group>
         <Form.Group controlId="formChargingLogic" style={{ marginTop: "10px" }}>
           <Form.Label>Charging Logic</Form.Label>
           <Row>
@@ -448,8 +466,19 @@ const EditChargingLogicPage = () => {
             />
           </Form.Group>
         </Form.Group>
-        <Button variant="primary" type="submit" style={{ marginTop: "15px" }}>
+        <Button
+          variant="primary"
+          type="submit"
+          style={{ marginTop: "15px", marginBottom: "15px" }}
+        >
           Update
+        </Button>{" "}
+        <Button
+          variant="secondary"
+          onClick={handleCancel}
+          style={{ marginTop: "15px", marginBottom: "15px" }}
+        >
+          Cancel
         </Button>
       </Form>
     </Container>

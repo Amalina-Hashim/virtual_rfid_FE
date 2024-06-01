@@ -10,9 +10,11 @@ import {
 import {
   createLocation,
   createChargingLogic,
-    getChargingLogics,
-    deleteChargingLogic,
+  getChargingLogics,
+  deleteChargingLogic,
   deleteLocation,
+  disableChargingLogic,
+  enableChargingLogic,
 } from "../../services/api";
 import { useGoogleMaps } from "../../GoogleMapsProvider";
 
@@ -101,6 +103,7 @@ const AddLocationPage = () => {
             months,
             years,
             location_name: logic.location_name,
+            enabled: logic.is_enabled, 
           };
         });
 
@@ -176,7 +179,7 @@ const AddLocationPage = () => {
       polygon_points: coordinates,
       radius: null,
     }));
-    setPolygon(polygon); 
+    setPolygon(polygon);
     setDrawingMode(null);
   };
 
@@ -193,7 +196,7 @@ const AddLocationPage = () => {
       radius: radius,
       polygon_points: [],
     }));
-    setCircle(circle); 
+    setCircle(circle);
     setDrawingMode(null);
   };
 
@@ -253,7 +256,7 @@ const AddLocationPage = () => {
 
       const chargingLogicPayload = {
         ...chargingLogicData,
-        location: locationResponse.data, 
+        location: locationResponse.data,
         amount_rate: amountRate,
         days: chargingLogicData.days
           ? chargingLogicData.days.map((day) => day.toString())
@@ -323,15 +326,41 @@ const AddLocationPage = () => {
     return rateMapping[displayValue] || displayValue;
   };
 
-const handleDelete = async (id, locationId) => {
-  try {
-    await deleteChargingLogic(id);
-    await deleteLocation(locationId.id); 
-    setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
-  } catch (error) {
-    console.error("Failed to delete charging logic and location", error);
-  }
-};
+  const handleDelete = async (id, locationId) => {
+    try {
+      await deleteChargingLogic(id);
+      await deleteLocation(locationId.id);
+      setChargingLogics(chargingLogics.filter((logic) => logic.id !== id));
+    } catch (error) {
+      console.error("Failed to delete charging logic and location", error);
+    }
+  };
+
+  const handleDisable = async (id) => {
+    try {
+      await disableChargingLogic(id);
+      setChargingLogics(
+        chargingLogics.map((logic) =>
+          logic.id === id ? { ...logic, enabled: false } : logic
+        )
+      );
+    } catch (error) {
+      console.error("Failed to disable charging logic", error);
+    }
+  };
+
+  const handleEnable = async (id) => {
+    try {
+      await enableChargingLogic(id);
+      setChargingLogics(
+        chargingLogics.map((logic) =>
+          logic.id === id ? { ...logic, enabled: true } : logic
+        )
+      );
+    } catch (error) {
+      console.error("Failed to enable charging logic", error);
+    }
+  };
 
   const handleClearDrawing = () => {
     if (polygon) {
@@ -342,7 +371,10 @@ const handleDelete = async (id, locationId) => {
       circle.setMap(null);
       setCircle(null);
     }
-    setDrawingMode(null);
+  };
+
+  const handleCancel = () => {
+    navigate(-1);
   };
 
   if (!isLoaded) return <div>Loading maps...</div>;
@@ -365,7 +397,10 @@ const handleDelete = async (id, locationId) => {
         </thead>
         <tbody>
           {chargingLogics.map((logic) => (
-            <tr key={logic.id}>
+            <tr
+              key={logic.id}
+              style={{ color: logic.enabled ? "black" : "grey" }}
+            >
               <td>{logic.location_name || "N/A"}</td>
               <td>${logic.amount_to_charge}</td>
               <td>{logic.start_time}</td>
@@ -380,7 +415,16 @@ const handleDelete = async (id, locationId) => {
                 <Button variant="primary" onClick={() => handleEdit(logic.id)}>
                   Edit
                 </Button>{" "}
-                <Button variant="secondary">Disable</Button>{" "}
+                <Button
+                  variant={logic.enabled ? "secondary" : "success"}
+                  onClick={() =>
+                    logic.enabled
+                      ? handleDisable(logic.id)
+                      : handleEnable(logic.id)
+                  }
+                >
+                  {logic.enabled ? "Disable" : "Enable"}
+                </Button>{" "}
                 <Button
                   variant="danger"
                   style={{ marginTop: "8px" }}
@@ -448,11 +492,7 @@ const handleDelete = async (id, locationId) => {
             >
               Draw Circle
             </Button>{" "}
-            <Button
-              variant="secondary"
-              onClick={handleClearDrawing}
-              disabled={!drawingMode}
-            >
+            <Button variant="secondary" onClick={handleClearDrawing}>
               Clear Drawing
             </Button>
           </div>
@@ -654,8 +694,19 @@ const handleDelete = async (id, locationId) => {
             }
           />
         </Form.Group>
-        <Button variant="primary" type="submit" style={{ marginTop: "15px" }}>
+        <Button
+          variant="primary"
+          type="submit"
+          style={{ marginTop: "15px", marginBottom: "15px" }}
+        >
           Submit
+        </Button>{" "}
+        <Button
+          variant="secondary"
+          onClick={handleCancel}
+          style={{ marginTop: "15px", marginBottom: "15px" }}
+        >
+          Cancel
         </Button>
       </Form>
     </Container>

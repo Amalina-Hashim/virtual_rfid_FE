@@ -9,7 +9,8 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
       watchId.current = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          checkGeofenceAndCharge(latitude, longitude);
+          const timestamp = new Date().toISOString();
+          checkGeofenceAndCharge(latitude, longitude, timestamp);
         },
         (error) => {
           console.error("Error watching position:", error);
@@ -30,15 +31,23 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
     };
   }, []);
 
-  const checkGeofenceAndCharge = async (latitude, longitude) => {
+  const checkGeofenceAndCharge = async (latitude, longitude, timestamp) => {
     try {
       const lat = parseFloat(latitude.toFixed(6));
       const lon = parseFloat(longitude.toFixed(6));
-      console.log("Checking geofence with latitude:", lat, "longitude:", lon);
+      console.log(
+        "Checking geofence with latitude:",
+        lat,
+        "longitude:",
+        lon,
+        "timestamp:",
+        timestamp
+      );
 
       const response = await checkAndChargeUser({
         latitude: lat,
         longitude: lon,
+        timestamp: timestamp,
       });
 
       console.log("Geofence check response:", response.data);
@@ -49,7 +58,7 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
           typeof response.data.location.id === "number" &&
           typeof onGeofenceEnter === "function"
         ) {
-          const locationId = response.data.location.id; 
+          const locationId = response.data.location.id;
           const locationResponse = await getLocationById(locationId);
 
           if (locationResponse.data) {
