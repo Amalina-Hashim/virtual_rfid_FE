@@ -427,7 +427,6 @@ const AddLocationPage = () => {
                 </Button>{" "}
                 <Button
                   variant="danger"
-                  style={{ marginTop: "8px" }}
                   onClick={() => handleDelete(logic.id, logic.location)}
                 >
                   Delete

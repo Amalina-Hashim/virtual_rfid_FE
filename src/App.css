@@ -1,7 +1,138 @@
 .App {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 0px;
+  background-color: #1B1B1B; 
+  height: 100vh; 
+  color: white; 
 }
+
+body {
+  margin-top: 40px;
+   background-color: #1B1B1B; 
+}
+
+.nav-link {
+  color: grey;
+}
+
+.nav-link:hover {
+  color: #7b2ff7;
+}
+
+.btn.btn-dark {
+  background: linear-gradient(135deg, #7b2ff7, #f107a3);
+  border-radius: 25px;
+  border: none; 
+  color: white; 
+  font-size: 16px; 
+  cursor: pointer; 
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+}
+
+.btn.btn-dark:hover {
+  background: linear-gradient(135deg, #6a23d7, #c90683); 
+}
+
+.offcanvas {
+  background-color: #1c1c1c ;
+}
+
+.offcanvas-title {
+  color: grey;
+}
+
+.btn-close {
+  width: 1.5em; 
+  height: 1.5em;
+  background: none; 
+  border: none; 
+  opacity: 1; 
+}
+
+.btn-close::before {
+  content: '\00d7'; 
+  font-size: 1.5em; 
+  color: #fff; 
+}
+
+.btn-close:hover {
+  color: #f00;
+}
+
+h3 {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+
+.table {
+  border: 1px solid #555555;
+  border-radius: 15px; 
+  overflow: hidden; 
+}
+
+.table th,
+.table td {
+  background-color: #3a3a3a; 
+  color: #ffffff; 
+  border-color: #555555; 
+}
+
+.form-control, .form-select {
+  border-radius: 25px;
+  border: none;  
+}
+
+.btn {
+  border-radius: 25px;
+  border: none; 
+  color: white; 
+  font-size: 16px; 
+  cursor: pointer; 
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-bottom: 8px;
+}
+
+.btn-primary, .btn-dark {
+  background: linear-gradient(135deg, #7b2ff7, #f107a3); 
+}
+
+.btn-primary:hover, .btn-dark:hover {
+  background: linear-gradient(135deg, #6a23d7, #c90683); 
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #c3e0e2, #9bc3c7, #6e9a9e); 
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #b0d3d5, #86b0b4, #5b8386); 
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #81ffdf, #52f7ce, #29cfa2); 
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #6ef3c8, #44dfb8, #1dbf91); 
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff9d8e, #fd7d74, #d6594e); 
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #ff8471, #e8655a, #c64d43); 
+}
+
+.form-label {
+  margin-top: 10px;
+}
+
 
 .App-logo {
   height: 40vmin;
@@ -14,26 +145,3 @@
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
