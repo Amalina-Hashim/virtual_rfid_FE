@@ -24,8 +24,8 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-  lat: 37.7749,
-  lng: -122.4194,
+  lat: 1.3521, // Default to Singapore
+  lng: 103.8198,
 };
 
 const options = {
@@ -167,21 +167,24 @@ const AddLocationPage = () => {
     [drawingMode]
   );
 
-  const onPolygonComplete = (polygon) => {
-    console.log("Polygon complete:", polygon);
-    const coordinates = polygon
-      .getPath()
-      .getArray()
-      .map((coord) => ({ lat: coord.lat(), lng: coord.lng() }));
-    console.log("Polygon coordinates:", coordinates);
-    setLocationData((prev) => ({
-      ...prev,
-      polygon_points: coordinates,
-      radius: null,
+const onPolygonComplete = (polygon) => {
+  console.log("Polygon complete:", polygon);
+  const coordinates = polygon
+    .getPath()
+    .getArray()
+    .map((coord) => ({
+      lat: parseFloat(coord.lat().toFixed(7)),
+      lng: parseFloat(coord.lng().toFixed(7)),
     }));
-    setPolygon(polygon);
-    setDrawingMode(null);
-  };
+  console.log("Polygon coordinates:", coordinates);
+  setLocationData((prev) => ({
+    ...prev,
+    polygon_points: coordinates,
+    radius: null,
+  }));
+  setPolygon(polygon);
+  setDrawingMode(null);
+};
 
   const onCircleComplete = (circle) => {
     console.log("Circle complete:", circle);

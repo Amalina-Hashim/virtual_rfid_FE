@@ -33,20 +33,24 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
 
   const checkGeofenceAndCharge = async (latitude, longitude, timestamp) => {
     try {
-      const lat = parseFloat(latitude.toFixed(6));
-      const lon = parseFloat(longitude.toFixed(6));
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      if (isNaN(lat) || isNaN(lon)) {
+        throw new Error("Invalid latitude or longitude");
+      }
+
       console.log(
         "Checking geofence with latitude:",
-        lat,
+        lat.toFixed(7),
         "longitude:",
-        lon,
+        lon.toFixed(7),
         "timestamp:",
         timestamp
       );
 
       const response = await checkAndChargeUser({
-        latitude: lat,
-        longitude: lon,
+        latitude: lat.toFixed(7),
+        longitude: lon.toFixed(7),
         timestamp: timestamp,
       });
 
@@ -64,9 +68,12 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
           if (locationResponse.data) {
             const locationInfo = {
               location_name: locationResponse.data.location_name || "Unknown",
-              amount_to_charge: response.data.transaction.amount || "0.00",
-              amount_rate: response.data.transaction.amount_rate || "N/A",
-              ...response.data,
+              amount_to_charge:
+                response.data.charging_logic.amount_to_charge || "0.00",
+              amount_rate: response.data.charging_logic.amount_rate || "N/A",
+              transaction: response.data.transaction,
+              location: response.data.location,
+              charging_logic: response.data.charging_logic,
             };
 
             onGeofenceEnter(locationInfo);

@@ -10,7 +10,6 @@ import {
 } from "../../services/api";
 import { useGoogleMaps } from "../../GoogleMapsProvider";
 
-
 const defaultCenter = { lat: 37.7749, lng: -122.4194 };
 
 const EditChargingLogicPage = () => {
@@ -136,22 +135,25 @@ const EditChargingLogicPage = () => {
     }
   };
 
-  const onPolygonComplete = (polygon) => {
-    const polygonPath = polygon
-      .getPath()
-      .getArray()
-      .map((latLng) => ({
-        lat: latLng.lat(),
-        lng: latLng.lng(),
-      }));
-    setLocationData({
-      ...locationData,
-      polygon_points: polygonPath,
-      radius: null,
-    });
-    setPolygon(polygon);
-    setDrawingMode(null);
-  };
+const onPolygonComplete = (polygon) => {
+  console.log("Polygon complete:", polygon);
+  const coordinates = polygon
+    .getPath()
+    .getArray()
+    .map((coord) => ({
+      lat: parseFloat(coord.lat().toFixed(7)),
+      lng: parseFloat(coord.lng().toFixed(7)),
+    }));
+  console.log("Polygon coordinates:", coordinates);
+  setLocationData((prev) => ({
+    ...prev,
+    polygon_points: coordinates,
+    radius: null,
+  }));
+  setPolygon(polygon);
+  setDrawingMode(null);
+};
+
 
   const onCircleComplete = (circle) => {
     setLocationData({
@@ -199,7 +201,7 @@ const EditChargingLogicPage = () => {
   };
 
   const handleCancel = () => {
-    navigate(-1); 
+    navigate(-1);
   };
 
   return (
@@ -329,156 +331,35 @@ const EditChargingLogicPage = () => {
                 radius: parseFloat(e.target.value),
               })
             }
+            disabled={locationData.polygon_points.length > 0}
           />
         </Form.Group>
         <Form.Group controlId="formPolygonPoints" style={{ marginTop: "10px" }}>
           <Form.Label>Polygon Points</Form.Label>
           <Form.Control
             as="textarea"
-            rows={5}
-            value={
-              locationData.polygon_points.length
-                ? JSON.stringify(locationData.polygon_points, null, 2)
-                : ""
-            }
+            rows={3}
+            value={JSON.stringify(locationData.polygon_points, null, 2) || ""}
             readOnly
           />
         </Form.Group>
-        <Form.Group controlId="formChargingLogic" style={{ marginTop: "10px" }}>
-          <Form.Label>Charging Logic</Form.Label>
-          <Row>
-            <Col>
-              <Form.Group controlId="formStartTime">
-                <Form.Label>Start Time</Form.Label>
-                <Form.Control
-                  type="time"
-                  value={chargingLogicData.start_time}
-                  onChange={(e) =>
-                    setChargingLogicData({
-                      ...chargingLogicData,
-                      start_time: e.target.value,
-                    })
-                  }
-                />
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group controlId="formEndTime">
-                <Form.Label>End Time</Form.Label>
-                <Form.Control
-                  type="time"
-                  value={chargingLogicData.end_time}
-                  onChange={(e) =>
-                    setChargingLogicData({
-                      ...chargingLogicData,
-                      end_time: e.target.value,
-                    })
-                  }
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Form.Group
-                controlId="formAmountToCharge"
-                style={{ marginTop: "10px" }}
-              >
-                <Form.Label>Amount to Charge</Form.Label>
-                <Form.Control
-                  type="number"
-                  value={chargingLogicData.amount_to_charge}
-                  onChange={(e) =>
-                    setChargingLogicData({
-                      ...chargingLogicData,
-                      amount_to_charge: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </Form.Group>
-            </Col>
-            <Col>
-              <Form.Group
-                controlId="formAmountRate"
-                style={{ marginTop: "10px" }}
-              >
-                <Form.Label>Amount Rate</Form.Label>
-                <Form.Select
-                  value={chargingLogicData.amount_rate || ""}
-                  onChange={(e) => {
-                    console.log("Selected Amount Rate:", e.target.value);
-                    setChargingLogicData({
-                      ...chargingLogicData,
-                      amount_rate: e.target.value,
-                    });
-                  }}
-                >
-                  <option value="">Select Rate</option>
-                  <option value="second">Per Second</option>
-                  <option value="minute">Per Minute</option>
-                  <option value="hour">Per Hour</option>
-                  <option value="day">Per Day</option>
-                  <option value="week">Per Week</option>
-                  <option value="month">Per Month</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-          <Form.Group controlId="formDays" style={{ marginTop: "10px" }}>
-            <Form.Label>Days</Form.Label>
-            <Form.Control
-              type="text"
-              value={chargingLogicData.days.join(", ")}
-              onChange={(e) =>
-                setChargingLogicData({
-                  ...chargingLogicData,
-                  days: e.target.value.split(",").map((day) => day.trim()),
-                })
-              }
-            />
-          </Form.Group>
-          <Form.Group controlId="formMonths" style={{ marginTop: "10px" }}>
-            <Form.Label>Months</Form.Label>
-            <Form.Control
-              type="text"
-              value={chargingLogicData.months.join(", ")}
-              onChange={(e) =>
-                setChargingLogicData({
-                  ...chargingLogicData,
-                  months: e.target.value
-                    .split(",")
-                    .map((month) => month.trim()),
-                })
-              }
-            />
-          </Form.Group>
-          <Form.Group controlId="formYears" style={{ marginTop: "10px" }}>
-            <Form.Label>Years</Form.Label>
-            <Form.Control
-              type="text"
-              value={chargingLogicData.years.join(", ")}
-              onChange={(e) =>
-                setChargingLogicData({
-                  ...chargingLogicData,
-                  years: e.target.value.split(",").map((year) => year.trim()),
-                })
-              }
-            />
-          </Form.Group>
-        </Form.Group>
+
+        <Button
+          variant="secondary"
+          style={{ marginTop: "15px", marginBottom: "15px", marginRight: "8px" }}
+          onClick={handleCancel}
+        >
+          {" "}
+          Cancel
+        </Button>
+
         <Button
           variant="primary"
           type="submit"
           style={{ marginTop: "15px", marginBottom: "15px" }}
+          className="float-end"
         >
-          Update
-        </Button>{" "}
-        <Button
-          variant="secondary"
-          onClick={handleCancel}
-          style={{ marginTop: "15px", marginBottom: "15px" }}
-        >
-          Cancel
+          Save Changes
         </Button>
       </Form>
     </Container>

@@ -4,14 +4,13 @@ import {
   getUser,
   getBalance,
   getChargingLogicStatus,
-  checkAndChargeUser as apiCheckAndChargeUser,
+  checkAndChargeUser,
 } from "../../services/api";
 import GeofenceMonitor from "../GeofenceMonitor";
 import LoginContext from "../../LoginContext";
 import Card from "react-bootstrap/Card";
 
-
-const POLLING_INTERVAL = 10000;
+const POLLING_INTERVAL = 2000;
 const GEOLOCATION_TIMEOUT = 20000;
 
 const UserHomePage = ({ onLogout }) => {
@@ -72,7 +71,7 @@ const UserHomePage = ({ onLogout }) => {
         fetchBalance();
         if (locationInfo) {
           const { latitude, longitude } = locationInfo.location;
-          checkAndChargeUser(latitude, longitude);
+          checkGeofenceAndCharge(latitude, longitude);
         }
       }, POLLING_INTERVAL);
     }
@@ -138,7 +137,7 @@ const UserHomePage = ({ onLogout }) => {
           setCheckingGps(false);
           const { latitude, longitude } = position.coords;
           setLocationInfo({ location: { latitude, longitude } });
-          checkAndChargeUser(latitude, longitude);
+          checkGeofenceAndCharge(latitude, longitude);
         },
         (error) => {
           if (error.code === 3) {
@@ -171,59 +170,84 @@ const UserHomePage = ({ onLogout }) => {
     }
   };
 
-  const checkAndChargeUser = async (latitude, longitude) => {
-    if (latitude === undefined || longitude === undefined) {
-      console.error("Latitude or longitude is undefined.");
-      return;
-    }
-
-    const currentTime = new Date().toISOString(); 
-
-    const payload = {
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-      timestamp: currentTime,
-    };
-
-    if (isNaN(payload.latitude) || isNaN(payload.longitude)) {
-      console.error("Latitude or longitude is not a valid number.");
-      return;
-    }
-
-    console.log("Sending request payload:", payload);
-
+  const checkGeofenceAndCharge = async (latitude, longitude) => {
+    const timestamp = new Date().toISOString();
     try {
-      const response = await apiCheckAndChargeUser(payload);
-      console.log("Response received:", response.data);
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      if (isNaN(lat) || isNaN(lon)) {
+        throw new Error("Invalid latitude or longitude");
+      }
 
-      if (response.data.transaction) {
-        setApplicableChargingLogic({
-          amount: response.data.transaction.amount,
-          amount_rate: response.data.transaction.amount_rate,
-          location_name: response.data.location.location_name,
+      console.log(
+        "Checking geofence with latitude:",
+        lat.toFixed(7),
+        "longitude:",
+        lon.toFixed(7),
+        "timestamp:",
+        timestamp
+      );
+
+      const response = await checkAndChargeUser({
+        latitude: lat.toFixed(7),
+        longitude: lon.toFixed(7),
+        timestamp: timestamp,
+      });
+
+      console.log("Geofence check response:", response.data);
+
+      const { transaction, location, charging_logic } = response.data;
+
+      if (transaction && location && charging_logic) {
+        console.log("Setting applicableChargingLogic:", {
+          amount: transaction.amount,
+          amount_rate: charging_logic.amount_rate,
+          location_name: location.location_name,
         });
-        fetchBalance(); 
+
+        setApplicableChargingLogic({
+          amount: transaction.amount,
+          amount_rate: charging_logic.amount_rate,
+          location_name: location.location_name,
+        });
       } else {
         setApplicableChargingLogic(null);
       }
-    } catch (error) {
-      setFetchError("Failed to check and charge user.");
-      setApplicableChargingLogic(null);
-      console.error("API call to check and charge user failed:", error);
 
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-        console.error("Error response headers:", error.response.headers);
+      if (response.data.balance !== undefined) {
+        setBalance(response.data.balance);
       }
+    } catch (error) {
+      console.error("Failed to check and charge user:", error);
     }
   };
 
   const handleGeofenceEnter = (locationInfo) => {
     setLocationInfo(locationInfo);
-    const { latitude, longitude } = locationInfo.location;
-    checkAndChargeUser(latitude, longitude);
+    fetchBalance();
   };
+
+  const handleBalanceUpdate = (newBalance) => {
+    setBalance(newBalance);
+  };
+
+  if (fetchError) {
+    return (
+      <Container>
+        <div className="alert alert-danger">{fetchError}</div>
+      </Container>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Container>
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
 
   return (
     <Container className="d-flex flex-column align-items-center">
@@ -266,6 +290,10 @@ const UserHomePage = ({ onLogout }) => {
                 }}
               >
                 <Card.Body>
+                  {console.log(
+                    "Rendering applicableChargingLogic:",
+                    applicableChargingLogic
+                  )}
                   <p>
                     You are within the zone:{" "}
                     <span style={{ fontWeight: "bold" }}>
@@ -289,7 +317,10 @@ const UserHomePage = ({ onLogout }) => {
               </Card>
             </div>
           )}
-          <GeofenceMonitor onGeofenceEnter={handleGeofenceEnter} />
+          <GeofenceMonitor
+            onGeofenceEnter={handleGeofenceEnter}
+            onBalanceUpdate={handleBalanceUpdate}
+          />
         </div>
       )}
     </Container>
