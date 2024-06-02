@@ -50,7 +50,7 @@ const AdminHomePage = () => {
           months,
           years,
           location_name: logic.location_name,
-          enabled: logic.is_enabled, 
+          enabled: logic.is_enabled,
         };
       });
 
@@ -108,7 +108,11 @@ const AdminHomePage = () => {
   return (
     <Container>
       <h1>Hello, Admin</h1>
-      <h3>Your Current Location(s):</h3>
+      <h3>
+        {chargingLogics.length === 0
+          ? "You have not created any locations yet"
+          : "Your Current Location(s):"}
+      </h3>
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -140,8 +144,8 @@ const AdminHomePage = () => {
               <td>
                 <Button
                   variant="primary"
-                          style={{ marginTop: "8px" }}
-                          onClick={() => handleEdit(logic.id)}
+                  style={{ marginTop: "8px" }}
+                  onClick={() => handleEdit(logic.id)}
                 >
                   Edit
                 </Button>{" "}

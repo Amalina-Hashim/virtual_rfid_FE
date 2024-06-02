@@ -20,7 +20,7 @@ const UserHomePage = ({ onLogout }) => {
   const [gpsEnabled, setGpsEnabled] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [chargingLogics, setChargingLogics] = useState([]);
-  const [applicableChargingLogic, setApplicableChargingLogic] = useState(null);
+  const [applicableChargingLogics, setApplicableChargingLogics] = useState([]);
   const [checkingGps, setCheckingGps] = useState(false);
   const [gpsChecked, setGpsChecked] = useState(false);
 
@@ -59,7 +59,7 @@ const UserHomePage = ({ onLogout }) => {
     setLocationInfo(null);
     setGpsEnabled(false);
     setFetchError(null);
-    setApplicableChargingLogic(null);
+    setApplicableChargingLogics([]);
     setCheckingGps(false);
     setGpsChecked(false);
     stopPolling();
@@ -205,13 +205,16 @@ const UserHomePage = ({ onLogout }) => {
           location_name: location.location_name,
         });
 
-        setApplicableChargingLogic({
-          amount: transaction.amount,
-          amount_rate: charging_logic.amount_rate,
-          location_name: location.location_name,
-        });
+        setApplicableChargingLogics([
+          {
+            amount: transaction.amount,
+            amount_rate: charging_logic.amount_rate,
+            location_name: location.location_name,
+          },
+        ]);
       } else {
-        setApplicableChargingLogic(null);
+        console.log("No valid charging logic found");
+        setApplicableChargingLogics([]);
       }
 
       if (response.data.balance !== undefined) {
@@ -278,9 +281,10 @@ const UserHomePage = ({ onLogout }) => {
               </p>
             </Card.Body>
           </Card>
-          {applicableChargingLogic && (
-            <div>
+          {applicableChargingLogics.length > 0 &&
+            applicableChargingLogics.map((applicableChargingLogic, index) => (
               <Card
+                key={index}
                 className="mx-auto mt-3"
                 style={{
                   width: "500px",
@@ -297,8 +301,7 @@ const UserHomePage = ({ onLogout }) => {
                   <p>
                     You are within the zone:{" "}
                     <span style={{ fontWeight: "bold" }}>
-                      {" "}
-                      {applicableChargingLogic.location_name}{" "}
+                      {applicableChargingLogic.location_name}
                     </span>
                   </p>
                   <p>
@@ -315,8 +318,7 @@ const UserHomePage = ({ onLogout }) => {
                   </p>
                 </Card.Body>
               </Card>
-            </div>
-          )}
+            ))}
           <GeofenceMonitor
             onGeofenceEnter={handleGeofenceEnter}
             onBalanceUpdate={handleBalanceUpdate}

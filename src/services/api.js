@@ -96,7 +96,9 @@ export const checkAndChargeUser = async (data) => {
 };
 
 // Transaction History APIs
-export const getTransactionHistories = () => api.get("/transactions/");
+export const getTransactionHistories = (page, pageSize) => {
+  return api.get(`/transactions/?page=${page}&page_size=${pageSize}`);
+};
 export const createTransactionHistory = (data) =>
   api.post("/transactions/", data);
 

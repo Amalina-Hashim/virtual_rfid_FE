@@ -135,25 +135,24 @@ const EditChargingLogicPage = () => {
     }
   };
 
-const onPolygonComplete = (polygon) => {
-  console.log("Polygon complete:", polygon);
-  const coordinates = polygon
-    .getPath()
-    .getArray()
-    .map((coord) => ({
-      lat: parseFloat(coord.lat().toFixed(7)),
-      lng: parseFloat(coord.lng().toFixed(7)),
+  const onPolygonComplete = (polygon) => {
+    console.log("Polygon complete:", polygon);
+    const coordinates = polygon
+      .getPath()
+      .getArray()
+      .map((coord) => ({
+        lat: parseFloat(coord.lat().toFixed(7)),
+        lng: parseFloat(coord.lng().toFixed(7)),
+      }));
+    console.log("Polygon coordinates:", coordinates);
+    setLocationData((prev) => ({
+      ...prev,
+      polygon_points: coordinates,
+      radius: null,
     }));
-  console.log("Polygon coordinates:", coordinates);
-  setLocationData((prev) => ({
-    ...prev,
-    polygon_points: coordinates,
-    radius: null,
-  }));
-  setPolygon(polygon);
-  setDrawingMode(null);
-};
-
+    setPolygon(polygon);
+    setDrawingMode(null);
+  };
 
   const onCircleComplete = (circle) => {
     setLocationData({
@@ -343,21 +342,143 @@ const onPolygonComplete = (polygon) => {
             readOnly
           />
         </Form.Group>
-
-        <Button
+        <h2 style={{ marginTop: "15px" }}>Charging Logic:</h2>
+        <Row>
+          <Col>
+            <Form.Group controlId="formStartTime">
+              <Form.Label>Start Time</Form.Label>
+              <Form.Control
+                type="time"
+                value={chargingLogicData.start_time}
+                onChange={(e) =>
+                  setChargingLogicData({
+                    ...chargingLogicData,
+                    start_time: e.target.value,
+                  })
+                }
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formEndTime">
+              <Form.Label>End Time</Form.Label>
+              <Form.Control
+                type="time"
+                value={chargingLogicData.end_time}
+                onChange={(e) =>
+                  setChargingLogicData({
+                    ...chargingLogicData,
+                    end_time: e.target.value,
+                  })
+                }
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Form.Group
+              controlId="formAmountToCharge"
+              style={{ marginTop: "10px" }}
+            >
+              <Form.Label>Amount to Charge</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={chargingLogicData.amount_to_charge}
+                onChange={(e) =>
+                  setChargingLogicData({
+                    ...chargingLogicData,
+                    amount_to_charge: e.target.value,
+                  })
+                }
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group
+              controlId="formAmountRate"
+              style={{ marginTop: "10px" }}
+            >
+              <Form.Label>Amount Rate</Form.Label>
+              <Form.Select
+                value={chargingLogicData.amount_rate || ""}
+                onChange={(e) => {
+                  console.log("Selected Amount Rate:", e.target.value);
+                  setChargingLogicData({
+                    ...chargingLogicData,
+                    amount_rate: e.target.value,
+                  });
+                }}
+              >
+                <option value="">Select Rate</option>
+                <option value="second">Per Second</option>
+                <option value="minute">Per Minute</option>
+                <option value="hour">Per Hour</option>
+                <option value="day">Per Day</option>
+                <option value="week">Per Week</option>
+                <option value="month">Per Month</option>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+        <Form.Group controlId="formDays" style={{ marginTop: "10px" }}>
+          <Form.Label>Days</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Days (e.g., Monday, Tuesday)"
+            value={chargingLogicData.days.join(", ")}
+            onChange={(e) =>
+              setChargingLogicData({
+                ...chargingLogicData,
+                days: e.target.value.split(",").map((day) => day.trim()),
+              })
+            }
+          />
+        </Form.Group>
+        <Form.Group controlId="formMonths" style={{ marginTop: "10px" }}>
+          <Form.Label>Months</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Months (e.g., January, February)"
+            value={chargingLogicData.months.join(", ")}
+            onChange={(e) =>
+              setChargingLogicData({
+                ...chargingLogicData,
+                months: e.target.value.split(",").map((month) => month.trim()),
+              })
+            }
+          />
+        </Form.Group>
+        <Form.Group controlId="formYears" style={{ marginTop: "10px" }}>
+          <Form.Label>Years</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Years (e.g., 2022, 2023)"
+            value={chargingLogicData.years.join(", ")}
+            onChange={(e) =>
+              setChargingLogicData({
+                ...chargingLogicData,
+                years: e.target.value.split(",").map((year) => year.trim()),
+              })
+            }
+          />
+        </Form.Group>
+        <Button 
           variant="secondary"
-          style={{ marginTop: "15px", marginBottom: "15px", marginRight: "8px" }}
+          style={{
+            marginTop: "15px",
+            marginBottom: "15px",
+            marginRight: "8px",
+          }}
           onClick={handleCancel}
         >
-          {" "}
           Cancel
-        </Button>
-
-        <Button
+        </Button>{" "}
+        <Button 
           variant="primary"
           type="submit"
           style={{ marginTop: "15px", marginBottom: "15px" }}
-          className="float-end"
         >
           Save Changes
         </Button>

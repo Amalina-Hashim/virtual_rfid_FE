@@ -385,7 +385,11 @@ const onPolygonComplete = (polygon) => {
   return (
     <Container>
       <h1>Hello, Admin</h1>
-      <h3>Your Current Location(s):</h3>
+      <h3>
+        {chargingLogics.length === 0
+          ? "You have not created any locations yet"
+          : "Your Current Location(s):"}
+      </h3>
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -697,19 +701,19 @@ const onPolygonComplete = (polygon) => {
           />
         </Form.Group>
         <Button
+          variant="secondary"
+          onClick={handleCancel}
+          style={{ marginTop: "15px", marginBottom: "15px", marginRight:"8px" }}
+        >
+          Cancel
+        </Button>
+        <Button
           variant="primary"
           type="submit"
           style={{ marginTop: "15px", marginBottom: "15px" }}
         >
           Submit
         </Button>{" "}
-        <Button
-          variant="secondary"
-          onClick={handleCancel}
-          style={{ marginTop: "15px", marginBottom: "15px" }}
-        >
-          Cancel
-        </Button>
       </Form>
     </Container>
   );
