@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import { Container, Spinner } from "react-bootstrap";
+import { Container, Spinner, Card } from "react-bootstrap";
 import {
   getUser,
   getBalance,
   getChargingLogicStatus,
+  getChargingLogicByLocation,
   checkAndChargeUser,
 } from "../../services/api";
 import GeofenceMonitor from "../GeofenceMonitor";
 import LoginContext from "../../LoginContext";
-import Card from "react-bootstrap/Card";
 
 const POLLING_INTERVAL = 2000;
 const GEOLOCATION_TIMEOUT = 20000;
@@ -45,6 +45,8 @@ const UserHomePage = ({ onLogout }) => {
   useEffect(() => {
     if (isLoggedIn && locationInfo) {
       startPolling();
+      const { latitude, longitude } = locationInfo.location;
+      checkChargingLogic(latitude, longitude);
     } else {
       stopPolling();
     }
@@ -137,7 +139,7 @@ const UserHomePage = ({ onLogout }) => {
           setCheckingGps(false);
           const { latitude, longitude } = position.coords;
           setLocationInfo({ location: { latitude, longitude } });
-          checkGeofenceAndCharge(latitude, longitude);
+          checkChargingLogic(latitude, longitude); // Check charging logic after getting the location
         },
         (error) => {
           if (error.code === 3) {
@@ -205,25 +207,41 @@ const UserHomePage = ({ onLogout }) => {
           location_name: location.location_name,
         });
 
-        setApplicableChargingLogics([
-          {
-            amount: transaction.amount,
-            amount_rate: charging_logic.amount_rate,
-            location_name: location.location_name,
-          },
-        ]);
-      } else {
-        console.log("No valid charging logic found");
-        setApplicableChargingLogics([]);
-      }
-
-      if (response.data.balance !== undefined) {
-        setBalance(response.data.balance);
+        // Do not update the applicableChargingLogics here
       }
     } catch (error) {
-      console.error("Failed to check and charge user:", error);
+      setFetchError("Failed to check geofence and charge.");
+      console.error("Geofence check error:", error);
     }
   };
+
+  const checkChargingLogic = async (latitude, longitude) => {
+    const timestamp = new Date().toISOString();
+
+    const lat = Number(latitude);
+    const lon = Number(longitude);
+
+    if (isNaN(lat) || isNaN(lon)) {
+      console.error("Invalid latitude or longitude");
+      return;
+    }
+
+    const payload = {
+      latitude: lat.toFixed(7),
+      longitude: lon.toFixed(7),
+      timestamp: timestamp,
+    };
+
+    try {
+      const data = await getChargingLogicByLocation(payload);
+      console.log("Charging logic data:", data);
+      setApplicableChargingLogics([data]); // Set applicable charging logics
+    } catch (error) {
+      console.error("Failed to fetch charging logic:", error);
+      setApplicableChargingLogics([]); // Clear charging logics if fetching fails
+    }
+  };
+
 
   const handleGeofenceEnter = (locationInfo) => {
     setLocationInfo(locationInfo);
@@ -233,24 +251,6 @@ const UserHomePage = ({ onLogout }) => {
   const handleBalanceUpdate = (newBalance) => {
     setBalance(newBalance);
   };
-
-  if (fetchError) {
-    return (
-      <Container>
-        <div className="alert alert-danger">{fetchError}</div>
-      </Container>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Container>
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
-    );
-  }
 
   return (
     <Container className="d-flex flex-column align-items-center">
@@ -282,7 +282,7 @@ const UserHomePage = ({ onLogout }) => {
             </Card.Body>
           </Card>
           {applicableChargingLogics.length > 0 &&
-            applicableChargingLogics.map((applicableChargingLogic, index) => (
+            applicableChargingLogics.map((chargingLogic, index) => (
               <Card
                 key={index}
                 className="mx-auto mt-3"
@@ -294,26 +294,23 @@ const UserHomePage = ({ onLogout }) => {
                 }}
               >
                 <Card.Body>
-                  {console.log(
-                    "Rendering applicableChargingLogic:",
-                    applicableChargingLogic
-                  )}
+                  {console.log("Rendering chargingLogic:", chargingLogic)}
                   <p>
                     You are within the zone:{" "}
                     <span style={{ fontWeight: "bold" }}>
-                      {applicableChargingLogic.location_name}
+                      {chargingLogic.location_name}
                     </span>
                   </p>
                   <p>
                     Charge amount:{" "}
                     <span style={{ fontWeight: "bold" }}>
-                      ${applicableChargingLogic.amount}
+                      ${chargingLogic.amount_to_charge}
                     </span>
                   </p>
                   <p>
                     Charge rate:{" "}
                     <span style={{ fontWeight: "bold" }}>
-                      Per {applicableChargingLogic.amount_rate}
+                      Per {chargingLogic.amount_rate}
                     </span>
                   </p>
                 </Card.Body>

@@ -80,8 +80,15 @@ export const getChargingLogicStatus = async () => {
 };
 
 // Get charging logic by location
-export const getChargingLogicByLocation = (coords) =>
-  api.post("/charging-logic/location/", coords);
+export const getChargingLogicByLocation = async (coords) => {
+  try {
+    const response = await api.post("/charging-logic/location/", coords);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch charging logic by location:", error);
+    throw error;
+  }
+};
 
 export const checkAndChargeUser = async (data) => {
   try {
