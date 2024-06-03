@@ -9,7 +9,7 @@ const MainLayout = () => {
   return (
     <Container fluid style={{ marginTop: "10px" }}>
       <Row>
-        <Col md={2}>
+        <Col md={1}>
           {userRole === "admin" ? <AdminSidebar /> : <UserSidebar />}
         </Col>
         <Col md={10}>

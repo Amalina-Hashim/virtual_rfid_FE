@@ -21,7 +21,7 @@ const UserSidebar = () => {
   return (
     <>
       <div className="menu-button-container">
-        <Button class="menu" variant="dark" onClick={handleShow}>
+        <Button class="menu" variant="dark" style={{marginLeft: "10px"}} onClick={handleShow}>
           <FaBars size={20} />
         </Button>
 
