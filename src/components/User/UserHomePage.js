@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
-import { Container, Spinner } from "react-bootstrap";
+import { Container, Spinner, Card } from "react-bootstrap";
 import {
   getUser,
   getBalance,
-  getChargingLogicStatus,
+  getChargingLogicByLocation,
   checkAndChargeUser,
 } from "../../services/api";
 import GeofenceMonitor from "../GeofenceMonitor";
 import LoginContext from "../../LoginContext";
-import Card from "react-bootstrap/Card";
 
 const POLLING_INTERVAL = 2000;
 const GEOLOCATION_TIMEOUT = 20000;
@@ -20,7 +19,7 @@ const UserHomePage = ({ onLogout }) => {
   const [gpsEnabled, setGpsEnabled] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [chargingLogics, setChargingLogics] = useState([]);
-  const [applicableChargingLogics, setApplicableChargingLogics] = useState([]);
+  const [applicableChargingLogic, setApplicableChargingLogic] = useState(null);
   const [checkingGps, setCheckingGps] = useState(false);
   const [gpsChecked, setGpsChecked] = useState(false);
 
@@ -30,7 +29,6 @@ const UserHomePage = ({ onLogout }) => {
   useEffect(() => {
     if (isLoggedIn) {
       fetchUser();
-      fetchChargingLogicStatus();
       if (!gpsChecked) {
         checkGpsEnabled();
       }
@@ -59,7 +57,7 @@ const UserHomePage = ({ onLogout }) => {
     setLocationInfo(null);
     setGpsEnabled(false);
     setFetchError(null);
-    setApplicableChargingLogics([]);
+    setApplicableChargingLogic(null);
     setCheckingGps(false);
     setGpsChecked(false);
     stopPolling();
@@ -71,7 +69,7 @@ const UserHomePage = ({ onLogout }) => {
         fetchBalance();
         if (locationInfo) {
           const { latitude, longitude } = locationInfo.location;
-          checkGeofenceAndCharge(latitude, longitude);
+          checkChargingLogicByLocation(latitude, longitude);
         }
       }, POLLING_INTERVAL);
     }
@@ -95,15 +93,6 @@ const UserHomePage = ({ onLogout }) => {
       }
     } catch (error) {
       setFetchError("Failed to fetch user data.");
-    }
-  };
-
-  const fetchChargingLogicStatus = async () => {
-    try {
-      const status = await getChargingLogicStatus();
-      setChargingLogics(status);
-    } catch (error) {
-      console.error("Failed to fetch charging logic status", error);
     }
   };
 
@@ -137,7 +126,7 @@ const UserHomePage = ({ onLogout }) => {
           setCheckingGps(false);
           const { latitude, longitude } = position.coords;
           setLocationInfo({ location: { latitude, longitude } });
-          checkGeofenceAndCharge(latitude, longitude);
+          checkChargingLogicByLocation(latitude, longitude);
         },
         (error) => {
           if (error.code === 3) {
@@ -162,66 +151,44 @@ const UserHomePage = ({ onLogout }) => {
   };
 
   const fetchBalance = async () => {
+    if (!locationInfo) return; // Ensure location info is available
+
     try {
-      const response = await getBalance();
-      setBalance(response.data.balance);
+      const response = await checkAndChargeUser({
+        latitude: locationInfo.location.latitude,
+        longitude: locationInfo.location.longitude,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (response.status === 200) {
+        setBalance(response.data.balance);
+      }
     } catch (error) {
+      console.error("Error fetching balance:", error);
       setFetchError("Failed to fetch balance.");
     }
   };
 
-  const checkGeofenceAndCharge = async (latitude, longitude) => {
-    const timestamp = new Date().toISOString();
+  const checkChargingLogicByLocation = async (latitude, longitude) => {
     try {
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-      if (isNaN(lat) || isNaN(lon)) {
-        throw new Error("Invalid latitude or longitude");
-      }
-
-      console.log(
-        "Checking geofence with latitude:",
-        lat.toFixed(7),
-        "longitude:",
-        lon.toFixed(7),
-        "timestamp:",
-        timestamp
-      );
-
-      const response = await checkAndChargeUser({
-        latitude: lat.toFixed(7),
-        longitude: lon.toFixed(7),
-        timestamp: timestamp,
+      const response = await getChargingLogicByLocation({
+        latitude,
+        longitude,
       });
+      console.log("Full charging logic by location response:", response.data);
 
-      console.log("Geofence check response:", response.data);
-
-      const { transaction, location, charging_logic } = response.data;
-
-      if (transaction && location && charging_logic) {
-        console.log("Setting applicableChargingLogic:", {
-          amount: transaction.amount,
-          amount_rate: charging_logic.amount_rate,
-          location_name: location.location_name,
+      if (response.data) {
+        setApplicableChargingLogic({
+          amount: response.data.amount_to_charge, // Use the actual amount from the response
+          amount_rate: response.data.amount_rate,
+          location_name: response.data.location_name,
         });
-
-        setApplicableChargingLogics([
-          {
-            amount: transaction.amount,
-            amount_rate: charging_logic.amount_rate,
-            location_name: location.location_name,
-          },
-        ]);
       } else {
-        console.log("No valid charging logic found");
-        setApplicableChargingLogics([]);
-      }
-
-      if (response.data.balance !== undefined) {
-        setBalance(response.data.balance);
+        setApplicableChargingLogic(null);
       }
     } catch (error) {
-      console.error("Failed to check and charge user:", error);
+      console.error("Failed to get charging logic by location:", error);
+      setApplicableChargingLogic(null);
     }
   };
 
@@ -269,10 +236,7 @@ const UserHomePage = ({ onLogout }) => {
         <div className="text-center">
           <Card
             className="mx-auto mt-3"
-            style={{
-              width: "500px",
-              backgroundColor: "#555555",
-            }}
+            style={{ width: "500px", backgroundColor: "#555555" }}
           >
             <Card.Body>
               <p style={{ fontSize: "25px" }}>
@@ -281,10 +245,9 @@ const UserHomePage = ({ onLogout }) => {
               </p>
             </Card.Body>
           </Card>
-          {applicableChargingLogics.length > 0 &&
-            applicableChargingLogics.map((applicableChargingLogic, index) => (
+          {applicableChargingLogic && (
+            <div>
               <Card
-                key={index}
                 className="mx-auto mt-3"
                 style={{
                   width: "500px",
@@ -308,7 +271,7 @@ const UserHomePage = ({ onLogout }) => {
                     Charge amount:{" "}
                     <span style={{ fontWeight: "bold" }}>
                       ${applicableChargingLogic.amount}
-                    </span>
+                    </span>{" "}
                   </p>
                   <p>
                     Charge rate:{" "}
@@ -318,7 +281,8 @@ const UserHomePage = ({ onLogout }) => {
                   </p>
                 </Card.Body>
               </Card>
-            ))}
+            </div>
+          )}
           <GeofenceMonitor
             onGeofenceEnter={handleGeofenceEnter}
             onBalanceUpdate={handleBalanceUpdate}

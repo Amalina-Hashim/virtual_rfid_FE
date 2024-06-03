@@ -92,22 +92,25 @@ const ProfilePage = () => {
           />
         </Form.Group>
         <Button
-          variant="primary"
+          variant="secondary"
+          onClick={handleCancel}
           style={{
             marginTop: "15px",
             marginBottom: "15px",
             marginRight: "10px",
           }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          style={{
+            marginTop: "15px",
+            marginBottom: "15px",
+          }}
           type="submit"
         >
           Update
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={handleCancel}
-          style={{ marginTop: "15px", marginBottom: "15px" }}
-        >
-          Cancel
         </Button>
       </Form>
     </Container>

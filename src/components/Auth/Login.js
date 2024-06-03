@@ -67,16 +67,7 @@ const Login = () => {
                 autoComplete="current-password"
               />
             </Form.Group>
-            <Form.Group controlId="formBasicRole" style={{ textAlign: "left" }}>
-              <Form.Label>Role</Form.Label>
-              <Form.Select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </Form.Select>
-            </Form.Group>
+            
             <Button
               variant="primary"
               style={{ marginTop: "15px" }}
