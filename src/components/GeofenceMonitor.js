@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { checkAndChargeUser, getLocationById } from "../services/api";
+import { getChargingLogicByLocation, getLocationById } from "../services/api";
 
 const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
   const watchId = useRef(null);
@@ -46,30 +46,31 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
         throw new Error("Invalid latitude or longitude");
       }
 
-      const response = await checkAndChargeUser({
+      const response = await getChargingLogicByLocation({
         latitude: lat.toFixed(7),
         longitude: lon.toFixed(7),
         timestamp: timestamp,
       });
 
-      if (response.data.transaction) {
+      if (response.data) {
+        const chargingLogic = response.data;
+
         if (
-          response.data.location &&
-          typeof response.data.location.id === "number" &&
+          chargingLogic.location &&
+          typeof chargingLogic.location.id === "number" &&
           typeof onGeofenceEnter === "function"
         ) {
-          const locationId = response.data.location.id;
+          const locationId = chargingLogic.location.id;
           const locationResponse = await getLocationById(locationId);
 
           if (locationResponse.data) {
             const locationInfo = {
               location_name: locationResponse.data.location_name || "Unknown",
-              amount_to_charge:
-                response.data.charging_logic.amount_to_charge || "0.00",
-              amount_rate: response.data.charging_logic.amount_rate || "N/A",
-              transaction: response.data.transaction,
-              location: response.data.location,
-              charging_logic: response.data.charging_logic,
+              amount_to_charge: chargingLogic.amount_to_charge || "0.00",
+              amount_rate: chargingLogic.amount_rate || "N/A",
+              transaction: chargingLogic.transaction || null,
+              location: chargingLogic.location,
+              charging_logic: chargingLogic,
             };
 
             onGeofenceEnter(locationInfo);
@@ -84,6 +85,7 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
       }
 
       if (
+        response.data &&
         response.data.balance !== undefined &&
         typeof onBalanceUpdate === "function"
       ) {
