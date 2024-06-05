@@ -10,7 +10,7 @@ import {
 import GeofenceMonitor from "../GeofenceMonitor";
 import LoginContext from "../../LoginContext";
 
-const POLLING_INTERVAL = 2000;
+const POLLING_INTERVAL = 1000;
 const GEOLOCATION_TIMEOUT = 20000;
 
 const UserHomePage = ({ onLogout }) => {

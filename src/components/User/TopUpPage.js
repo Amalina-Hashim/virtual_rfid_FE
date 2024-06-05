@@ -157,19 +157,26 @@ const TopUpForm = () => {
           </Col>
         </Row>
         <Button
+          variant="secondary"
+          onClick={handleCancel}
+          style={{
+            marginTop: "15px",
+            marginBottom: "15px",
+            marginRight: "10px",
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
           variant="primary"
-          style={{ marginTop: "15px", marginBottom: "15px", marginRight: "10px" }}
+          style={{
+            marginTop: "15px",
+            marginBottom: "15px",
+          }}
           type="submit"
           disabled={!stripe}
         >
           Top Up
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={handleCancel}
-          style={{ marginTop: "15px", marginBottom: "15px" }}
-        >
-          Cancel
         </Button>
       </Form>
       {message && <p>{message}</p>}

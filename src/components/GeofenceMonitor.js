@@ -3,6 +3,7 @@ import { checkAndChargeUser, getLocationById } from "../services/api";
 
 const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
   const watchId = useRef(null);
+  const lastCheckTime = useRef(0);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -32,6 +33,12 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
   }, []);
 
   const checkGeofenceAndCharge = async (latitude, longitude, timestamp) => {
+    if (Date.now() - lastCheckTime.current < 2000) {
+      // Ensure at least 2 seconds between checks
+      return;
+    }
+    lastCheckTime.current = Date.now();
+
     try {
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
@@ -39,22 +46,11 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
         throw new Error("Invalid latitude or longitude");
       }
 
-      console.log(
-        "Checking geofence with latitude:",
-        lat.toFixed(7),
-        "longitude:",
-        lon.toFixed(7),
-        "timestamp:",
-        timestamp
-      );
-
       const response = await checkAndChargeUser({
         latitude: lat.toFixed(7),
         longitude: lon.toFixed(7),
         timestamp: timestamp,
       });
-
-      console.log("Geofence check response:", response.data);
 
       if (response.data.transaction) {
         if (
