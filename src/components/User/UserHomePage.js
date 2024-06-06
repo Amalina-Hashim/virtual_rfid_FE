@@ -16,6 +16,7 @@ const GEOLOCATION_TIMEOUT = 20000;
 const UserHomePage = ({ onLogout }) => {
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0);
+  const [originalBalance, setOriginalBalance] = useState(0); // State for original balance
   const [locationInfo, setLocationInfo] = useState(null);
   const [gpsEnabled, setGpsEnabled] = useState(false);
   const [fetchError, setFetchError] = useState(null);
@@ -25,6 +26,7 @@ const UserHomePage = ({ onLogout }) => {
   const [gpsChecked, setGpsChecked] = useState(false);
 
   const balancePolling = useRef(null);
+  const operationInProgress = useRef(false);
   const { isLoggedIn } = useContext(LoginContext);
 
   useEffect(() => {
@@ -58,6 +60,7 @@ const UserHomePage = ({ onLogout }) => {
   const resetState = () => {
     setUser(null);
     setBalance(0);
+    setOriginalBalance(0); // Reset original balance
     setLocationInfo(null);
     setGpsEnabled(false);
     setFetchError(null);
@@ -69,11 +72,15 @@ const UserHomePage = ({ onLogout }) => {
 
   const startPolling = () => {
     if (!balancePolling.current) {
-      balancePolling.current = setInterval(() => {
-        fetchBalance();
-        if (locationInfo) {
-          const { latitude, longitude } = locationInfo.location;
-          checkGeofenceAndCharge(latitude, longitude);
+      balancePolling.current = setInterval(async () => {
+        if (!operationInProgress.current) {
+          operationInProgress.current = true;
+          await fetchBalance();
+          if (locationInfo) {
+            const { latitude, longitude } = locationInfo.location;
+            await checkGeofenceAndCharge(latitude, longitude);
+          }
+          operationInProgress.current = false;
         }
       }, POLLING_INTERVAL);
     }
@@ -91,7 +98,7 @@ const UserHomePage = ({ onLogout }) => {
       const response = await getUser();
       if (response.data && response.data.username) {
         setUser(response.data);
-        fetchBalance();
+        await fetchBalance();
       } else {
         setFetchError("User data is missing or incomplete.");
       }
@@ -166,7 +173,8 @@ const UserHomePage = ({ onLogout }) => {
   const fetchBalance = async () => {
     try {
       const response = await getBalance();
-      setBalance(response.data.balance);
+      setOriginalBalance(balance); // Set original balance before updating
+      setBalance(parseFloat(response.data.balance).toFixed(2)); // Ensure balance is always formatted to two decimal places
     } catch (error) {
       setFetchError("Failed to fetch balance.");
     }
@@ -207,7 +215,10 @@ const UserHomePage = ({ onLogout }) => {
           location_name: location.location_name,
         });
 
-        // Do not update the applicableChargingLogics here
+        // Update the balance if the transaction is successful
+        setBalance((prevBalance) =>
+          (prevBalance - transaction.amount).toFixed(2)
+        ); // Ensure balance is always formatted to two decimal places
       }
     } catch (error) {
       setFetchError("Failed to check geofence and charge.");
@@ -242,14 +253,14 @@ const UserHomePage = ({ onLogout }) => {
     }
   };
 
-
   const handleGeofenceEnter = (locationInfo) => {
     setLocationInfo(locationInfo);
     fetchBalance();
   };
 
   const handleBalanceUpdate = (newBalance) => {
-    setBalance(newBalance);
+    setOriginalBalance(balance); // Update original balance before setting new balance
+    setBalance(parseFloat(newBalance).toFixed(2)); // Ensure balance is always formatted to two decimal places
   };
 
   return (
