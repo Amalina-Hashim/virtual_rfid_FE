@@ -7,10 +7,9 @@ import LoginContext from "../../LoginContext";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useContext(LoginContext);
+  const { setIsLoggedIn, setUserRole } = useContext(LoginContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -22,6 +21,7 @@ const Login = () => {
 
       localStorage.setItem("userRole", userRole);
       setIsLoggedIn(true);
+      setUserRole(userRole);
 
       if (userRole === "admin") {
         navigate("/admin/home");
@@ -67,7 +67,7 @@ const Login = () => {
                 autoComplete="current-password"
               />
             </Form.Group>
-            
+
             <Button
               variant="primary"
               style={{ marginTop: "15px" }}

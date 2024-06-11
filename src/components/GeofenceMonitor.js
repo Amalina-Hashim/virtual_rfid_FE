@@ -1,7 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useContext } from "react";
 import { getChargingLogicByLocation, getLocationById } from "../services/api";
+import PollingContext from "../PollingContext";
 
 const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
+  const { setLocationInfo } = useContext(PollingContext);
   const watchId = useRef(null);
   const lastCheckTime = useRef(0);
 
@@ -34,7 +36,6 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
 
   const checkGeofenceAndCharge = async (latitude, longitude, timestamp) => {
     if (Date.now() - lastCheckTime.current < 2000) {
-      // Ensure at least 2 seconds between checks
       return;
     }
     lastCheckTime.current = Date.now();
@@ -52,47 +53,51 @@ const GeofenceMonitor = ({ onGeofenceEnter, onBalanceUpdate }) => {
         timestamp: timestamp,
       });
 
-      if (response.data) {
-        const chargingLogic = response.data;
+      if (
+        response &&
+        response.location &&
+        typeof response.location.id === "number"
+      ) {
+        const chargingLogic = response;
+        const locationId = chargingLogic.location.id;
+        const locationResponse = await getLocationById(locationId);
 
-        if (
-          chargingLogic.location &&
-          typeof chargingLogic.location.id === "number" &&
-          typeof onGeofenceEnter === "function"
-        ) {
-          const locationId = chargingLogic.location.id;
-          const locationResponse = await getLocationById(locationId);
+        if (locationResponse.data) {
+          const locationInfo = {
+            location_name: locationResponse.data.location_name || "Unknown",
+            amount_to_charge: chargingLogic.amount_to_charge || "0.00",
+            amount_rate: chargingLogic.amount_rate || "N/A",
+            transaction: chargingLogic.transaction || null,
+            location: chargingLogic.location,
+            charging_logic: chargingLogic,
+          };
 
-          if (locationResponse.data) {
-            const locationInfo = {
-              location_name: locationResponse.data.location_name || "Unknown",
-              amount_to_charge: chargingLogic.amount_to_charge || "0.00",
-              amount_rate: chargingLogic.amount_rate || "N/A",
-              transaction: chargingLogic.transaction || null,
-              location: chargingLogic.location,
-              charging_logic: chargingLogic,
-            };
-
+          if (typeof onGeofenceEnter === "function") {
             onGeofenceEnter(locationInfo);
-          } else {
-            console.error("Location data not found");
           }
+          setLocationInfo(locationInfo);
         } else {
-          console.error(
-            "Invalid location ID or onGeofenceEnter is not a function"
-          );
+          console.error("Location data not found");
         }
+      } else {
+        console.warn(
+          "No valid charging logic found or invalid response structure"
+        );
       }
 
       if (
-        response.data &&
-        response.data.balance !== undefined &&
+        response &&
+        response.balance !== undefined &&
         typeof onBalanceUpdate === "function"
       ) {
-        onBalanceUpdate(response.data.balance);
+        onBalanceUpdate(response.balance);
       }
     } catch (error) {
-      console.error("Failed to check geofence and charge user:", error);
+      if (error.response && error.response.status === 404) {
+        console.warn("No charging logic found for the given location");
+      } else {
+        console.error("Failed to check geofence and charge user:", error);
+      }
     }
   };
 

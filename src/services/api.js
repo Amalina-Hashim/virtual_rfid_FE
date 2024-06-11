@@ -24,19 +24,20 @@ export const login = (data) => api.post("/token/", data);
 // User Profile Update API
 export const updateUserProfile = async (authToken, user, password) => {
   try {
-    const response = await api.put(
-      "/profile/update/",
-      {
-        username: user.username,
-        email: user.email,
-        password: password,
+    const payload = {
+      username: user.username,
+      email: user.email,
+    };
+
+    if (password) {
+      payload.password = password;
+    }
+
+    const response = await api.put("/profile/update/", payload, {
+      headers: {
+        Authorization: `Token ${authToken}`,
       },
-      {
-        headers: {
-          Authorization: `Token ${authToken}`,
-        },
-      }
-    );
+    });
 
     return response.data;
   } catch (error) {
@@ -85,11 +86,17 @@ export const getChargingLogicByLocation = async (coords) => {
     const response = await api.post("/charging-logic/location/", coords);
     return response.data;
   } catch (error) {
-    console.error("Failed to fetch charging logic by location:", error);
-    throw error;
+    if (error.response && error.response.status === 404) {
+      console.warn("No charging logic found for the given location and timestamp.");
+      return null;
+    } else {
+      console.error("Failed to fetch charging logic by location:", error);
+      throw error;
+    }
   }
 };
 
+// Check location and charge user
 export const checkAndChargeUser = async (data) => {
   try {
     console.log("Sending request payload:", data);

@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Nav, Offcanvas, Button } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
-import { logout } from "../../services/auth";
 import { FaBars } from "react-icons/fa";
 import "../../App.css";
+import LoginContext from "../../LoginContext"; 
 
 const UserSidebar = () => {
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
+  const { logout } = useContext(LoginContext); 
 
   const handleLogout = () => {
     logout();
@@ -21,7 +22,12 @@ const UserSidebar = () => {
   return (
     <>
       <div className="menu-button-container">
-        <Button class="menu" variant="dark" style={{marginLeft: "10px"}} onClick={handleShow}>
+        <Button
+          className="menu"
+          variant="dark"
+          style={{ marginLeft: "10px" }}
+          onClick={handleShow}
+        >
           <FaBars size={20} />
         </Button>
 

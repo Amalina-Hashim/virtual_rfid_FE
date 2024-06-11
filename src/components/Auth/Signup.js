@@ -11,7 +11,7 @@ const Signup = () => {
   const [role, setRole] = useState("user");
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useContext(LoginContext);
+  const { setIsLoggedIn, setUserRole } = useContext(LoginContext);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -28,6 +28,7 @@ const Signup = () => {
 
       localStorage.setItem("userRole", userRole);
       setIsLoggedIn(true);
+      setUserRole(userRole);
 
       if (userRole === "admin") {
         navigate("/admin/home");

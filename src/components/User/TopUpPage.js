@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Button, Form, Container, Row, Col } from "react-bootstrap";
 import {
   Elements,
@@ -11,17 +11,19 @@ import {
 import { loadStripe } from "@stripe/stripe-js";
 import { getBalance, makePayment } from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import PollingContext from "../../PollingContext";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
+
 
 const TopUpForm = () => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate(); 
   const [amount, setAmount] = useState("");
-  const [balance, setBalance] = useState(0);
   const [message, setMessage] = useState("");
   const [cardName, setCardName] = useState("");
+  const { balance, setBalance } = useContext(PollingContext);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -116,11 +118,18 @@ const TopUpForm = () => {
       const handleCancel = () => {
         navigate("/user/home");
       };
+  
+      const displayBalance =
+        typeof balance === "number" ? balance.toFixed(2) : "0.00";
+
+
  
   return (
     <Container>
       <h2>Top Up</h2>
-      <p>Your current balance is: ${balance}</p>
+      <p style={{ fontSize: "20px" }}>
+        Your current balance is: ${displayBalance}
+      </p>
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId="formAmount">
           <Form.Label>Amount</Form.Label>

@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Button, Form, Container } from "react-bootstrap";
 import { getUser, updateUserProfile } from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import PollingContext from "../../PollingContext";
 
 const ProfilePage = () => {
   const [user, setUser] = useState({ username: "", email: "" });
   const [password, setPassword] = useState("");
   const [isUpdated, setIsUpdated] = useState(false);
   const navigate = useNavigate(); 
-
+  const { balance, setLocationInfo, setBalance } = useContext(PollingContext);
+  
   useEffect(() => {
     const fetchUser = async () => {
       try {

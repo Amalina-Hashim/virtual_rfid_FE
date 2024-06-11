@@ -24,7 +24,7 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-  lat: 1.3521, // Default to Singapore
+  lat: 1.3521, // Defaults to Singapore
   lng: 103.8198,
 };
 

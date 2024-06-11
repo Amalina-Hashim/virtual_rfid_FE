@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Table, Container, Spinner } from "react-bootstrap";
 import { getTransactionHistories } from "../../services/api";
+import PollingContext from "../../PollingContext";
 
 const UserTransactionHistoryPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { balance, setLocationInfo, setBalance } = useContext(PollingContext);
 
   useEffect(() => {
     const fetchTransactions = async () => {

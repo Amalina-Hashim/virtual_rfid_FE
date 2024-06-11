@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", // update with deployed url
+  baseURL: "http://localhost:8000/api", // update with deployed URL
   headers: {
     "Content-Type": "application/json",
   },
@@ -25,7 +25,12 @@ export const login = async (data) => {
       headers: { Authorization: `Token ${response.data.token}` },
     });
     const user = userResponse.data.find((u) => u.username === data.username);
-    localStorage.setItem("userRole", user.role);
+    if (user) {
+      console.log("User role:", user.role); 
+      localStorage.setItem("userRole", user.role);
+    } else {
+      console.error("User not found");
+    }
   }
   return response;
 };
