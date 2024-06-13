@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", // update with deployed URL
+  baseURL: "https://django-app-kkoytosj3a-as.a.run.app/api", // update with deployed URL
   headers: {
     "Content-Type": "application/json",
   },
