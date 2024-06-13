@@ -9,34 +9,39 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { getBalance, makePayment } from "../../services/api";
+import { makePayment, getUser } from "../../services/api";
 import { useNavigate } from "react-router-dom";
-import PollingContext from "../../PollingContext";
+import LoginContext from "../../LoginContext"; // Import LoginContext
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
-
 
 const TopUpForm = () => {
   const stripe = useStripe();
   const elements = useElements();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [cardName, setCardName] = useState("");
-  const { balance, setBalance } = useContext(PollingContext);
+  const [balance, setBalance] = useState(null); // Local state for balance
+  const { isLoggedIn } = useContext(LoginContext); // Use LoginContext to check if the user is logged in
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        const response = await getBalance();
-        setBalance(response.data.balance);
-      } catch (error) {
-        console.error("Failed to fetch balance", error);
-      }
-    };
+    if (isLoggedIn) {
+      const fetchUserData = async () => {
+        try {
+          const response = await getUser();
+          if (response.data && response.data.balance !== undefined) {
+            console.log("Fetched user data:", response.data);
+            setBalance(parseFloat(response.data.balance));
+          }
+        } catch (error) {
+          console.error("Failed to fetch user data", error);
+        }
+      };
 
-    fetchBalance();
-  }, []);
+      fetchUserData();
+    }
+  }, [isLoggedIn]);
 
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
@@ -76,10 +81,10 @@ const TopUpForm = () => {
 
       if (status === "succeeded") {
         setMessage("Payment succeeded!");
-        const newBalance = balance + parseFloat(amount);
-        setBalance(newBalance);
+        const newBalance = parseFloat(balance) + parseFloat(amount);
+        setBalance(newBalance.toFixed(2));
         console.log("Navigating to /user/home...");
-        navigate("/user/home", { state: { newBalance } }); 
+        navigate("/user/home", { state: { newBalance } });
       } else if (status === "requires_action") {
         const confirmCardPayment = await stripe.confirmCardPayment(
           clientSecret,
@@ -97,10 +102,10 @@ const TopUpForm = () => {
           setMessage("Payment failed: " + confirmCardPayment.error.message);
         } else if (confirmCardPayment.paymentIntent.status === "succeeded") {
           setMessage("Payment succeeded!");
-          const newBalance = balance + parseFloat(amount);
-          setBalance(newBalance);
+          const newBalance = parseFloat(balance) + parseFloat(amount);
+          setBalance(newBalance.toFixed(2));
           console.log("Navigating to /user/home...");
-          navigate("/user/home", { state: { newBalance } }); 
+          navigate("/user/home", { state: { newBalance } });
         } else {
           setMessage(
             "Payment status: " + confirmCardPayment.paymentIntent.status
@@ -114,16 +119,16 @@ const TopUpForm = () => {
       setMessage("Payment failed: " + error.message);
     }
   };
-    
-      const handleCancel = () => {
-        navigate("/user/home");
-      };
-  
-      const displayBalance =
-        typeof balance === "number" ? balance.toFixed(2) : "0.00";
 
+  const handleCancel = () => {
+    navigate("/user/home");
+  };
 
- 
+  const displayBalance =
+    typeof balance === "number" && !isNaN(balance)
+      ? balance.toFixed(2)
+      : "0.00";
+
   return (
     <Container>
       <h2>Top Up</h2>
