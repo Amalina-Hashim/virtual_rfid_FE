@@ -11,7 +11,7 @@ import {
 import { loadStripe } from "@stripe/stripe-js";
 import { makePayment, getUser } from "../../services/api";
 import { useNavigate } from "react-router-dom";
-import LoginContext from "../../LoginContext"; // Import LoginContext
+import LoginContext from "../../LoginContext"; 
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
@@ -22,8 +22,8 @@ const TopUpForm = () => {
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [cardName, setCardName] = useState("");
-  const [balance, setBalance] = useState(null); // Local state for balance
-  const { isLoggedIn } = useContext(LoginContext); // Use LoginContext to check if the user is logged in
+  const [balance, setBalance] = useState(null); 
+  const { isLoggedIn } = useContext(LoginContext); 
 
   useEffect(() => {
     if (isLoggedIn) {
