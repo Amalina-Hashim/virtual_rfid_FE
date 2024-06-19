@@ -1,70 +1,89 @@
-# Getting Started with Create React App
+# Virtual RFID and Geofencing System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project uses mobile phone's GPS as virtual RFID devices and Google Maps API for geofencing. It includes an admin panel for setting up charging rules and a user app for managing accounts and viewing transactions.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+### Admin Panel (Web App)
+- **Built with**: ReactJS
+- **Capabilities**:
+  - Set country and location ranges using Google Maps API.
+  - Name locations and link them with Google Maps locations.
+  - Define time ranges.
+  - Set charge amounts for each location.
+  - Choose charge rate (per second, minute, or hour).
+  - Specify when rules apply (days, months, years).
+- **Views**:
+  - Manage saved locations and their charging rules.
+  - View transaction history.
 
-### `npm start`
+### User App (Web App)
+- **Built with**: ReactJS
+- **Capabilities**:
+  - Signup/Login.
+  - Detect phone type (iOS/Android) and enable GPS.
+  - Integrate with Google geofencing/tracking API to detect entry into geofences and apply charges.
+  - View current balance.
+  - Top up balance using Stripe integration.
+  - View transaction history (timestamp, location name, location, amount).
+  - Edit profile (email, password).
+  
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Geofencing and Charging System
+- **Built with**: Python Django
+- **Capabilities**: Uses Google Maps API for geofencing and automatically charges users entering designated location ranges based on admin rules.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Database
+- **Options**: SQLite
+- **Stores**:
+  - User information
+  - Location details
+  - Transaction history
+  - Charging logic
 
-### `npm test`
+## Workflow
+1. Admin sets charging rules.
+2. User signs up/logs in and enables GPS.
+3. User's device detects entry into a geofence.
+4. Geofencing system sends a charge request to the backend.
+5. Backend verifies location, checks balance, and deducts the amount.
+6. User app updates balance and shows deduction details.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Technical Requirements
+- **Backend Framework**: Python Django
+- **Database**: SQLite (for development)
 
-### `npm run build`
+## API Endpoints
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **User Management**:
+  - `POST /api/register/` - Register a new user
+  - `POST /api/token/` - Obtain auth token
+  - `GET /api/users/me/` - Get current user details
+  - `PUT /api/profile/update/` - Update user profile
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Charging Logic**:
+  - `GET /api/charging-logics/` - List all charging logics
+  - `POST /api/charging-logics/` - Create a new charging logic
+  - `PUT /api/charging-logics/<id>/disable/` - Disable a charging logic
+  - `PUT /api/charging-logics/<id>/enable/` - Enable a charging logic
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Location Management**:
+  - `GET /api/locations/` - List all locations
+  - `POST /api/locations/` - Create a new location
 
-### `npm run eject`
+- **Transactions**:
+  - `GET /api/transactions/` - List all transactions
+  - `POST /api/transactions/create/` - Create a new transaction
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **Balance Management**:
+  - `GET /api/balance/` - Get current balance
+  - `POST /api/make-payment/` - Make a payment
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Screenshots
+![Admin Panel Screenshot](screenshots/Admin_Screenshot.png)
+![User App Screenshot](screenshots/User_Screenshot.png)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Setup Instructions
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Amalina-Hashim/virtual_rfid_FE.git
