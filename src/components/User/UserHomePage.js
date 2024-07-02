@@ -20,6 +20,7 @@ const UserHomePage = ({ onLogout }) => {
     if (isLoggedIn) {
       fetchUser();
       fetchChargingLogicStatus();
+      checkGpsEnabled();
     } else {
       resetState();
     }
@@ -61,11 +62,54 @@ const UserHomePage = ({ onLogout }) => {
   const handleGeofenceEnter = (locationInfo) => {
     console.log("Geofence Enter - Location Info:", locationInfo);
     setLocationInfo(locationInfo);
-    setApplicableChargingLogics([locationInfo.charging_logic]); 
+    setApplicableChargingLogics([locationInfo.charging_logic]);
   };
 
   const handleBalanceUpdate = (newBalance) => {
-    setBalance(parseFloat(newBalance).toFixed(2)); 
+    setBalance(parseFloat(newBalance).toFixed(2));
+  };
+
+  const checkGpsEnabled = async () => {
+    try {
+      const permissionStatus = await navigator.permissions.query({
+        name: "geolocation",
+      });
+      if (
+        permissionStatus.state === "granted" ||
+        permissionStatus.state === "prompt"
+      ) {
+        getGpsLocation();
+      } else {
+        console.error("GPS permission denied");
+      }
+    } catch (error) {
+      console.error("Error checking GPS permission", error);
+    }
+  };
+
+  const getGpsLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const newLocationInfo = { location: { latitude, longitude } };
+          setLocationInfo(newLocationInfo);
+          localStorage.setItem("locationInfo", JSON.stringify(newLocationInfo));
+          console.log("GPS location fetched:", position.coords);
+          setGpsChecked(true);
+        },
+        (error) => {
+          console.error("Error getting current position:", error);
+        },
+        {
+          timeout: 20000,
+          enableHighAccuracy: false,
+          maximumAge: 0,
+        }
+      );
+    } else {
+      console.error("Geolocation not available in navigator");
+    }
   };
 
   return (
@@ -132,10 +176,12 @@ const UserHomePage = ({ onLogout }) => {
                 </Card.Body>
               </Card>
             ))}
-          <GeofenceMonitor
-            onGeofenceEnter={handleGeofenceEnter}
-            onBalanceUpdate={handleBalanceUpdate}
-          />
+          {isLoggedIn && (
+            <GeofenceMonitor
+              onGeofenceEnter={handleGeofenceEnter}
+              onBalanceUpdate={handleBalanceUpdate}
+            />
+          )}
         </div>
       )}
     </Container>

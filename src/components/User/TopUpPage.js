@@ -155,6 +155,16 @@ const TopUpForm = () => {
         <Form.Group>
           <Form.Label>Card Number</Form.Label>
           <CardNumberElement className="form-control" />
+          <p style={{ marginTop: "10px" }}>
+            Stripe test cards{" "}
+            <a
+              href="https://docs.stripe.com/testing"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              here
+            </a>
+          </p>
         </Form.Group>
         <Row>
           <Col>

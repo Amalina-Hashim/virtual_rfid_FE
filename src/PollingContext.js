@@ -39,7 +39,7 @@ export const PollingProvider = ({ children }) => {
     return () => {
       stopPolling();
     };
-  }, [isLoggedIn, userRole]);
+  }, [isLoggedIn, userRole, locationInfo]);
 
   const startPolling = () => {
     console.log("Starting polling...");
