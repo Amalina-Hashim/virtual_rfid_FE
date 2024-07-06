@@ -1,6 +1,14 @@
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  Alert,
+  Spinner,
+} from "react-bootstrap";
 import { login, getUser } from "../../services/api";
 import LoginContext from "../../LoginContext";
 
@@ -8,11 +16,13 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setIsLoggedIn, setUserRole } = useContext(LoginContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await login({ username, password });
       localStorage.setItem("authToken", response.data.token);
@@ -31,6 +41,8 @@ const Login = () => {
     } catch (error) {
       setErrorMessage("Login failed. Please check your username and password.");
       console.error("Login failed", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,7 +51,15 @@ const Login = () => {
       <Row className="justify-content-md-center">
         <Col md={6}>
           <h2>Login to Geopayment</h2>
-          {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+          {errorMessage && (
+            <Alert
+              variant="danger"
+              onClose={() => setErrorMessage("")}
+              dismissible
+            >
+              {errorMessage}
+            </Alert>
+          )}
           <Form onSubmit={handleLogin}>
             <Form.Group
               controlId="formBasicEmail"
@@ -67,13 +87,23 @@ const Login = () => {
                 autoComplete="current-password"
               />
             </Form.Group>
-
             <Button
               variant="primary"
               style={{ marginTop: "15px" }}
               type="submit"
+              disabled={loading}
             >
-              Login
+              {loading ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : (
+                "Login"
+              )}
             </Button>
           </Form>
           <p className="mt-3">

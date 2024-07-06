@@ -1,6 +1,14 @@
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
+import {
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  Alert,
+  Spinner,
+} from "react-bootstrap";
 import { register, login, getUser } from "../../services/api";
 import LoginContext from "../../LoginContext";
 
@@ -10,6 +18,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setIsLoggedIn, setUserRole } = useContext(LoginContext);
 
@@ -19,6 +28,7 @@ const Signup = () => {
       setErrorMessage("Please enter a valid email address.");
       return;
     }
+    setLoading(true);
     try {
       await register({ username, email, password, role });
       const response = await login({ username, password });
@@ -38,6 +48,8 @@ const Signup = () => {
     } catch (error) {
       setErrorMessage("Signup failed. Please try again.");
       console.error("Signup failed", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,7 +63,15 @@ const Signup = () => {
       <Row className="justify-content-md-center">
         <Col md={6}>
           <h2>Signup to Geopayment</h2>
-          {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+          {errorMessage && (
+            <Alert
+              variant="danger"
+              onClose={() => setErrorMessage("")}
+              dismissible
+            >
+              {errorMessage}
+            </Alert>
+          )}
           <Form onSubmit={handleSignup}>
             <Form.Group
               controlId="formBasicUsername"
@@ -106,8 +126,19 @@ const Signup = () => {
               variant="primary"
               style={{ marginTop: "15px" }}
               type="submit"
+              disabled={loading}
             >
-              Signup
+              {loading ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : (
+                "Signup"
+              )}
             </Button>
           </Form>
           <p className="mt-3">
