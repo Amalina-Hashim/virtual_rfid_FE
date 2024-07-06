@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Button, Form, Container, Row, Col } from "react-bootstrap";
+import { Button, Form, Container, Row, Col, Spinner } from "react-bootstrap";
 import {
   Elements,
   CardNumberElement,
@@ -11,7 +11,7 @@ import {
 import { loadStripe } from "@stripe/stripe-js";
 import { makePayment, getUser } from "../../services/api";
 import { useNavigate } from "react-router-dom";
-import LoginContext from "../../LoginContext"; 
+import LoginContext from "../../LoginContext";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
@@ -22,8 +22,9 @@ const TopUpForm = () => {
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [cardName, setCardName] = useState("");
-  const [balance, setBalance] = useState(null); 
-  const { isLoggedIn } = useContext(LoginContext); 
+  const [balance, setBalance] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { isLoggedIn } = useContext(LoginContext);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -56,6 +57,7 @@ const TopUpForm = () => {
     if (!stripe || !elements) {
       return;
     }
+    setLoading(true);
 
     const cardNumberElement = elements.getElement(CardNumberElement);
     const cardExpiryElement = elements.getElement(CardExpiryElement);
@@ -117,6 +119,8 @@ const TopUpForm = () => {
     } catch (error) {
       console.error("Payment failed", error);
       setMessage("Payment failed: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -198,9 +202,19 @@ const TopUpForm = () => {
             marginBottom: "15px",
           }}
           type="submit"
-          disabled={!stripe}
+          disabled={!stripe || loading}
         >
-          Top Up
+          {loading ? (
+            <Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+            />
+          ) : (
+            "Top Up"
+          )}
         </Button>
       </Form>
       {message && <p>{message}</p>}
