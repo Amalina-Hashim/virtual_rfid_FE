@@ -14,14 +14,21 @@
     function loadScript() {
       if (window.REACT_APP_GOOGLE_MAPS_API_KEY) {
         const scriptTag = document.createElement("script");
-        scriptTag.src = "https://maps.googleapis.com/maps/api/js?key=" + window.REACT_APP_GOOGLE_MAPS_API_KEY + "&libraries=geometry,places,drawing&v=weekly";
+        scriptTag.src =
+          "https://maps.googleapis.com/maps/api/js?key=" +
+          window.REACT_APP_GOOGLE_MAPS_API_KEY +
+          "&libraries=geometry,places,drawing&v=weekly";
         scriptTag.defer = true;
+        scriptTag.async = true;
         document.head.appendChild(scriptTag);
-        console.log("Google Maps API loaded with libraries: geometry, places, drawing");
+        console.log(
+          "Google Maps API loaded with libraries: geometry, places, drawing"
+        );
       }
       const stripeScriptTag = document.createElement("script");
       stripeScriptTag.src = "https://js.stripe.com/v3/";
       stripeScriptTag.defer = true;
+      stripeScriptTag.async = true;
       stripeScriptTag.onload = () => {
         console.log("Stripe.js loaded");
       };
